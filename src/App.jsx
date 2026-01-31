@@ -120,9 +120,21 @@ export default function App() {
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
+
+    // Fix for mobile viewport height (Safari toolbar issue)
+    const setAppHeight = () => {
+      document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+    };
+
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    setAppHeight();
+
+    window.addEventListener('resize', () => {
+      checkMobile();
+      setAppHeight();
+    });
+
+    return () => window.removeEventListener('resize', checkMobile); // simplified cleanup
   }, []);
 
   const [hoveredNav, setHoveredNav] = useState(null);
@@ -529,10 +541,9 @@ export default function App() {
       </>
     )
   ];
-
   return (
     <div className={`w-full min-h-screen flex items-center justify-center`}>
-      <div ref={comp} className={`relative h-[100dvh] w-full overflow-hidden transition-all duration-500 ease-in-out font-sans ${theme.text} ${theme.selection}`} style={{ backgroundColor: pageBg, '--muted-color': mutedColor }}>
+      <div ref={comp} className={`relative w-full transition-all duration-500 ease-in-out font-sans ${theme.text} ${theme.selection} ${isMobile ? 'h-auto min-h-screen overflow-visible' : 'h-[100dvh] overflow-hidden'}`} style={{ backgroundColor: pageBg, '--muted-color': mutedColor, minHeight: isMobile ? 'var(--app-height)' : '100dvh' }}>
 
         {/* Backgrounds */}
         <div className="absolute inset-0 z-0">
@@ -728,7 +739,7 @@ export default function App() {
         </div>
 
         {/* MOBILE LAYOUT */}
-        <div className={`relative z-10 block h-full w-full overflow-y-auto overflow-x-hidden scroll-smooth pointer-events-auto md:hidden`}>
+        <div className={`relative z-10 block w-full pointer-events-auto md:hidden`}>
           <div className={`fixed inset-0 z-40 bg-black/95 backdrop-blur-xl transition-transform duration-500 flex flex-col items-center justify-center gap-6 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
             {['Home', 'About', 'Projects', 'Contact'].map((item) => {
               let sectionId = 'mobile-home'; if (item === 'About') sectionId = 'mobile-about'; if (item === 'Projects') sectionId = 'mobile-work'; if (item === 'Contact') sectionId = 'mobile-contact'; const isName = item === 'About';
@@ -739,7 +750,7 @@ export default function App() {
 
           {/* 1. HOME SECTION */}
           {/* FIX: Added 'px-4' here. Now ALL children (Bio, Name, Scroll Text) align perfectly. */}
-          <section id="mobile-home" className="min-h-[100dvh] flex flex-col justify-center py-[12dvh] relative px-4 gap-[8dvh]">
+          <section id="mobile-home" className="min-h-screen flex flex-col justify-center py-24 relative px-4 gap-8" style={{ minHeight: 'var(--app-height)' }}>
 
             {/* Bio Text */}
             {/* REMOVED: 'px-4' from here. It inherits width from the parent section. */}
@@ -784,14 +795,14 @@ export default function App() {
             </div>
           </section>
 
-          <section id="mobile-about" className="min-h-[100dvh] py-[10dvh] px-6 flex flex-col justify-center"><div className={`flex flex-col w-full ${theme.text}`}><div className={`w-full aspect-square rounded-2xl border ${theme.border} bg-white/5 backdrop-blur-sm mb-6 flex items-center justify-center`}><span className={`text-xs uppercase tracking-widest ${theme.subText}`}>Picture</span></div><div className="mb-6"><h3 className={`text-xs uppercase tracking-[0.2em] mb-3 ${theme.subText}`}>Expertise</h3><div className="flex flex-wrap gap-2 text-[0.7rem]">{['Creative Ops Strategy', 'Hybrid Workflow Design', 'AIGC Pipeline Arch.', 'Art Direction', 'Brand Systems', 'Tech-Art Leadership'].map((skill, i) => (<div key={i} className={`px-2 py-1.5 rounded border ${theme.border} uppercase tracking-wider bg-transparent whitespace-nowrap`}>{skill}</div>))}</div></div><div className="space-y-4 leading-relaxed text-sm"><p>I'm Vinz Tan, I help Creative Teams escape production limits and maximize their impact.
+          <section id="mobile-about" className="min-h-screen py-24 px-6 flex flex-col justify-center" style={{ minHeight: 'var(--app-height)' }}><div className={`flex flex-col w-full ${theme.text}`}><div className={`w-full aspect-square rounded-2xl border ${theme.border} bg-white/5 backdrop-blur-sm mb-6 flex items-center justify-center`}><span className={`text-xs uppercase tracking-widest ${theme.subText}`}>Picture</span></div><div className="mb-6"><h3 className={`text-xs uppercase tracking-[0.2em] mb-3 ${theme.subText}`}>Expertise</h3><div className="flex flex-wrap gap-2 text-[0.7rem]">{['Creative Ops Strategy', 'Hybrid Workflow Design', 'AIGC Pipeline Arch.', 'Art Direction', 'Brand Systems', 'Tech-Art Leadership'].map((skill, i) => (<div key={i} className={`px-2 py-1.5 rounded border ${theme.border} uppercase tracking-wider bg-transparent whitespace-nowrap`}>{skill}</div>))}</div></div><div className="space-y-4 leading-relaxed text-sm"><p>I'm Vinz Tan, I help Creative Teams escape production limits and maximize their impact.
             With over 12 years of experience as a Lead Artist and Educator, I bridge the gap between traditional artistry and modern efficiency. I do not replace artists; I empower them with Hybrid Design Systems—workflows that let AI handle the repetitive "drafting" so your team can focus entirely on high-fidelity polish and creative strategy.
             My Focus:
             • Empowering Artists: Training teams to use AI as a tool for control, not a replacement.
             • Protecting Integrity: Using AI for the "base," while human taste handles the "finish."
             • Scaling Output: Removing bottlenecks so teams can create more without burnout.</p></div></div></section>
-          <section id="mobile-work" className="min-h-[100dvh] py-[10dvh] px-6 flex flex-col justify-center"><div className={`flex flex-col w-full ${theme.text}`}><h2 className={`text-3xl font-bold uppercase tracking-wide mb-6`} style={{ color: colorScheme.base }}>Work</h2><p className="leading-relaxed text-sm mb-8">Featured projects coming soon...</p></div></section>
-          <section id="mobile-contact" className="min-h-[100dvh] py-[10dvh] px-6 flex flex-col justify-between"><div className={`flex flex-col w-full ${theme.text}`}><h2 className={`text-3xl font-bold uppercase tracking-wide mb-6`} style={{ color: colorScheme.base }}>Contact</h2><p className="leading-relaxed text-sm mb-8">Let's discuss...</p><div className="space-y-4 text-sm"><div><p className={`${theme.subText} text-xs uppercase tracking-widest`}>Email</p><p>hello@vinztan.com</p></div></div></div><div className="w-full flex flex-row items-end justify-between mt-12 pt-12 border-t border-white/10"><div className={`text-[10px] uppercase tracking-widest ${theme.subText} text-left leading-tight`}>Based in Malaysia <br /> @ 2026</div><div className="flex items-center gap-6"><a href="#" className={`${theme.subText} hover:scale-110 transition-transform`} aria-label="LinkedIn"><svg role="img" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452z" /></svg></a><a href="mailto:hello@vinztan.com" className={`${theme.subText} hover:scale-110 transition-transform`} aria-label="Email"><svg role="img" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-.4 4.25l-7.07 4.42c-.32.2-.74.2-1.06 0L4.4 8.25c-.25-.16-.4-.43-.4-.72 0-.67.73-1.07 1.3-.72L12 11l6.7-4.19c.57-.35 1.3.05 1.3.72 0 .29-.15.56-.4.72z" /></svg></a></div></div></section>
+          <section id="mobile-work" className="min-h-screen py-24 px-6 flex flex-col justify-center" style={{ minHeight: 'var(--app-height)' }}><div className={`flex flex-col w-full ${theme.text}`}><h2 className={`text-3xl font-bold uppercase tracking-wide mb-6`} style={{ color: colorScheme.base }}>Work</h2><p className="leading-relaxed text-sm mb-8">Featured projects coming soon...</p></div></section>
+          <section id="mobile-contact" className="min-h-screen py-24 px-6 flex flex-col justify-between" style={{ minHeight: 'var(--app-height)' }}><div className={`flex flex-col w-full ${theme.text}`}><h2 className={`text-3xl font-bold uppercase tracking-wide mb-6`} style={{ color: colorScheme.base }}>Contact</h2><p className="leading-relaxed text-sm mb-8">Let's discuss...</p><div className="space-y-4 text-sm"><div><p className={`${theme.subText} text-xs uppercase tracking-widest`}>Email</p><p>hello@vinztan.com</p></div></div></div><div className="w-full flex flex-row items-end justify-between mt-12 pt-12 border-t border-white/10"><div className={`text-[10px] uppercase tracking-widest ${theme.subText} text-left leading-tight`}>Based in Malaysia <br /> @ 2026</div><div className="flex items-center gap-6"><a href="#" className={`${theme.subText} hover:scale-110 transition-transform`} aria-label="LinkedIn"><svg role="img" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452z" /></svg></a><a href="mailto:hello@vinztan.com" className={`${theme.subText} hover:scale-110 transition-transform`} aria-label="Email"><svg role="img" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-.4 4.25l-7.07 4.42c-.32.2-.74.2-1.06 0L4.4 8.25c-.25-.16-.4-.43-.4-.72 0-.67.73-1.07 1.3-.72L12 11l6.7-4.19c.57-.35 1.3.05 1.3.72 0 .29-.15.56-.4.72z" /></svg></a></div></div></section>
         </div>
       </div>
     </div>
