@@ -82,7 +82,7 @@ export default function DesktopLayout({
     ];
 
     return (
-        <div ref={comp} className={`relative z-10 h-full w-full pointer-events-none hidden md:flex flex-col`}>
+        <div ref={comp} className={`relative z-10 h-full w-full pointer-events-none flex flex-col`}>
             <div className="flex-1 grid grid-cols-[auto_1fr] gap-0 min-h-0">
                 <div className="flex flex-col justify-between h-full min-h-0 pl-[4vw] pr-[2vw] py-[4vh] pointer-events-auto">
                     {/* Nav */}
