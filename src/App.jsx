@@ -366,8 +366,8 @@ export default function App() {
           />
         </div>
 
-        {/* === LAYER 4: RIPPLE CANVAS (z-20) - Fixed, full viewport === */}
-        <canvas ref={rippleCanvasRef} className="fixed inset-0 z-20 pointer-events-none" />
+        {/* === LAYER 4: RIPPLE CANVAS (z-20) - HIDDEN FOR DEBUGGING === */}
+        {/* <canvas ref={rippleCanvasRef} className="fixed inset-0 z-20 pointer-events-none" /> */}
 
         {/* === LAYER 5: CURSOR (z-60) - Desktop only === */}
         {!isMobile && <div ref={cursorRef} className={`fixed top-0 left-0 w-6 h-6 border ${isLightMode ? 'border-black' : 'border-white'} rounded-full pointer-events-none z-[60] mix-blend-difference -translate-x-1/2 -translate-y-1/2 hidden md:block transition-transform duration-75 ease-out`} />}
