@@ -40,7 +40,8 @@ export default function App() {
   const [isLightMode, setIsLightMode] = useState(false);
   const [isColorPinned, setIsColorPinned] = useState(false);
   const [activePage, setActivePage] = useState('home');
-  const [isMobile, setIsMobile] = useState(false);
+  // FIX: Initialize with function to check immediately to avoid double-render (Desktop -> Mobile)
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false));
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -242,11 +243,27 @@ export default function App() {
     const resizeCanvas = () => {
       // OPTIMIZATION: Cap pixel ratio on mobile
       const dpr = isMobile ? Math.min(window.devicePixelRatio, 1.5) : window.devicePixelRatio;
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
+      // FIX 1: Use getBoundingClientRect to match displayed CSS size exactly (prevents oval distortion)
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
       ctx.scale(dpr, dpr);
     };
-    window.addEventListener('resize', resizeCanvas); setTimeout(resizeCanvas, 50);
+
+    let prevWidth = window.innerWidth;
+    const handleResize = () => {
+      const currentWidth = window.innerWidth;
+      // FIX 2: On mobile, if width hasn't changed (address bar show/hide), skip resize to prevent lag
+      if (isMobile && Math.abs(currentWidth - prevWidth) < 10) return;
+
+      prevWidth = currentWidth;
+      resizeCanvas();
+    };
+
+    window.addEventListener('resize', handleResize);
+    // Initial size
+    setTimeout(resizeCanvas, 50);
+
     const handleMouseMove = (e) => {
       const x = e.clientX; const y = e.clientY; const now = Date.now();
       if (cursorRef.current) cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
@@ -270,8 +287,8 @@ export default function App() {
       animationFrameId = requestAnimationFrame(animate);
     };
     animate();
-    return () => { window.removeEventListener('resize', resizeCanvas); window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('pointerdown', handlePointerDown); cancelAnimationFrame(animationFrameId); };
-  }, [colorScheme.compHSL, isLightMode]);
+    return () => { window.removeEventListener('resize', handleResize); window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('pointerdown', handlePointerDown); cancelAnimationFrame(animationFrameId); };
+  }, [colorScheme.compHSL, isLightMode, isMobile]);
 
   // Global Click handler for color change
   useEffect(() => {
