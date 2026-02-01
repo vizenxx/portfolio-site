@@ -112,7 +112,7 @@ export default function App() {
     }
   };
 
-  useEffect(() => { if (spotsRef.current.length === 0) randomizeSpots(); }, []);
+  useEffect(() => { randomizeSpots(); }, [isMobile]);
 
   const bioRef = useRef(null);
   const containerRef = useRef(null);
