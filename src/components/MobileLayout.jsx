@@ -26,7 +26,7 @@ export default function MobileLayout({
 
     // Floating menu state
     const menuRef = useRef(null);
-    const [menuPos, setMenuPos] = useState({ x: 16, y: 16 });
+    const [menuPos, setMenuPos] = useState({ x: 16, y: 64 });
     const dragging = useRef(false);
     const dragStart = useRef({ x: 0, y: 0 });
     const moved = useRef(false);
