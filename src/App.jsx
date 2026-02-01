@@ -310,17 +310,17 @@ export default function App() {
     <div className={`w-full min-h-screen flex items-center justify-center overflow-x-hidden`}>
       <div
         ref={containerRef}
-        className={`relative w-full max-w-[100vw] transition-all duration-500 ease-in-out font-sans ${theme.text} ${theme.selection} ${isMobile ? 'min-h-screen overflow-x-hidden overflow-y-auto' : 'h-[100dvh] overflow-hidden'}`}
-        style={{ backgroundColor: pageBg, '--muted-color': mutedColor, minHeight: isMobile ? 'var(--app-height)' : '100dvh' }}
+        className={`relative w-full max-w-[100vw] transition-all duration-500 ease-in-out font-sans ${theme.text} ${theme.selection} h-[100dvh] overflow-hidden`}
+        style={{ backgroundColor: pageBg, '--muted-color': mutedColor, minHeight: '100dvh' }}
       >
         {/* SHARED BACKGROUNDS */}
-        <div className={`fixed inset-0 z-0 overflow-hidden ${isMobile ? 'h-[100vh]' : 'h-[100dvh]'}`}>
+        <div className={`fixed inset-0 z-0 overflow-hidden h-[100dvh]`}>
           <canvas ref={spotlightRef} className="absolute inset-0 z-0 transition-opacity duration-1000 scale-125 pointer-events-none" style={{ filter: 'blur(100px)' }} />
           {/* Simple Noise for Mobile? Or keep same? Keeping original logic for now */}
           <div className="absolute inset-0 z-1 pointer-events-none" style={{ backdropFilter: 'blur(30px) saturate(1.2)', WebkitBackdropFilter: 'blur(30px) saturate(1.2)', backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E")`, mixBlendMode: isLightMode ? 'plus-lighter' : 'overlay', opacity: isLightMode ? 0.6 : 0.4 }} />
         </div>
 
-        <canvas ref={rippleCanvasRef} className={`fixed top-0 left-0 w-full z-20 pointer-events-none ${isMobile ? 'h-[120vh]' : 'h-full'}`} />
+        <canvas ref={rippleCanvasRef} className="fixed top-0 left-0 w-full z-20 pointer-events-none h-full" />
         {!isMobile && <div ref={cursorRef} className={`fixed top-0 left-0 w-6 h-6 border ${isLightMode ? 'border-black' : 'border-white'} rounded-full pointer-events-none z-[60] mix-blend-difference -translate-x-1/2 -translate-y-1/2 hidden md:block transition-transform duration-75 ease-out`} />}
 
         {/* Global Noise Overlay */}

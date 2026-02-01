@@ -42,9 +42,25 @@ export default function MobileLayout({
     // --- FLOATING CONTROL DRAG LOGIC ---
     // Using a simpler implementation for reliability
     const iconContainerRef = useRef(null);
-    const [position, setPosition] = useState({ x: 20, y: 20 });
+    // FIX: Initialize to TOP RIGHT (y is distance from BOTTOM)
+    const [position, setPosition] = useState(() => ({
+        x: 20,
+        y: typeof window !== 'undefined' ? window.innerHeight - 100 : 600
+    }));
     const isDragging = useRef(false);
     const dragOffset = useRef({ x: 0, y: 0 });
+
+    useEffect(() => {
+        // Ensure it stays within bounds on resize
+        const handleResize = () => {
+            setPosition(prev => ({
+                x: Math.min(prev.x, window.innerWidth - 60),
+                y: Math.min(prev.y, window.innerHeight - 60)
+            }));
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const el = iconContainerRef.current;
@@ -67,9 +83,12 @@ export default function MobileLayout({
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
 
+            // Constrain to viewport
+            const constrainedY = Math.max(20, Math.min(viewportHeight - newTop - el.offsetHeight, viewportHeight - 80));
+
             setPosition({
                 x: viewportWidth - newLeft - el.offsetWidth,
-                y: viewportHeight - newTop - el.offsetHeight
+                y: constrainedY // Use constrained Y
             });
         };
 
@@ -132,7 +151,7 @@ export default function MobileLayout({
     ];
 
     return (
-        <div className={`relative min-h-[100dvh] w-full md:hidden overflow-x-hidden ${isMenuOpen ? 'overflow-y-hidden h-[100dvh]' : ''}`}>
+        <div className={`absolute inset-0 overflow-y-auto overflow-x-hidden transition-colors duration-500 ease-in-out ${theme.text} md:hidden ${isMenuOpen ? 'overflow-y-hidden h-[100dvh]' : ''}`}>
 
             {/* Floating Controls (Menu, Theme, Pin) */}
             <div
