@@ -313,8 +313,15 @@ export default function App() {
 
         {/* Mobile Layout + Controls */}
         <MobileLayout
+          activePage={activePage}
+          handlePageChange={handlePageChange}
           isLightMode={isLightMode}
           setIsLightMode={setIsLightMode}
+          theme={theme}
+          colorScheme={colorScheme}
+          nameColor={nameColor}
+          roles={roles}
+          currentRoleIndex={currentRoleIndex}
           isColorPinned={isColorPinned}
           setIsColorPinned={setIsColorPinned}
         />
