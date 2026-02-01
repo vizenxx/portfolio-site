@@ -26,6 +26,13 @@ export default function MobileLayout({
     const aboutRef = useRef(null);
     const workRef = useRef(null);
 
+    // --- FLOATING MENU DRAG STATE ---
+    const iconContainerRef = useRef(null);
+    const [position, setPosition] = useState({ x: 16, y: 16 }); // top-right position
+    const isDragging = useRef(false);
+    const dragOffset = useRef({ x: 0, y: 0 });
+    const hasMoved = useRef(false);
+
     // --- BIO ROTATION ---
     useEffect(() => {
         let timeout;
@@ -38,6 +45,69 @@ export default function MobileLayout({
         };
         scheduleNext();
         return () => clearTimeout(timeout);
+    }, []);
+
+    // --- FLOATING MENU DRAG LOGIC ---
+    useEffect(() => {
+        const el = iconContainerRef.current;
+        if (!el) return;
+
+        const handleStart = (clientX, clientY) => {
+            isDragging.current = true;
+            hasMoved.current = false;
+            const rect = el.getBoundingClientRect();
+            dragOffset.current = {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+            el.style.transition = 'none';
+        };
+
+        const handleMove = (clientX, clientY) => {
+            if (!isDragging.current) return;
+            hasMoved.current = true;
+
+            const newX = window.innerWidth - clientX - (el.offsetWidth - dragOffset.current.x);
+            const newY = clientY - dragOffset.current.y;
+
+            // Constrain to viewport
+            const constrainedX = Math.max(8, Math.min(newX, window.innerWidth - el.offsetWidth - 8));
+            const constrainedY = Math.max(8, Math.min(newY, window.innerHeight - el.offsetHeight - 8));
+
+            setPosition({ x: constrainedX, y: constrainedY });
+        };
+
+        const handleEnd = () => {
+            isDragging.current = false;
+            el.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        };
+
+        const onTouchStart = (e) => {
+            e.preventDefault();
+            handleStart(e.touches[0].clientX, e.touches[0].clientY);
+        };
+        const onTouchMove = (e) => {
+            e.preventDefault();
+            handleMove(e.touches[0].clientX, e.touches[0].clientY);
+        };
+        const onMouseDown = (e) => handleStart(e.clientX, e.clientY);
+        const onMouseMove = (e) => handleMove(e.clientX, e.clientY);
+
+        el.addEventListener('touchstart', onTouchStart, { passive: false });
+        window.addEventListener('touchmove', onTouchMove, { passive: false });
+        window.addEventListener('touchend', handleEnd);
+        el.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', handleEnd);
+
+        return () => {
+            el.removeEventListener('touchstart', onTouchStart);
+            window.removeEventListener('touchmove', onTouchMove);
+            window.removeEventListener('touchend', handleEnd);
+            el.removeEventListener('mousedown', onMouseDown);
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', handleEnd);
+        };
     }, []);
 
     // Scroll Handler for Menu
@@ -74,23 +144,48 @@ export default function MobileLayout({
         )
     ];
 
+    // Theme-aware colors for menu
+    const menuBg = isLightMode ? 'bg-white/80' : 'bg-black/20';
+    const menuBorder = isLightMode ? 'border-black/10' : 'border-white/10';
+    const menuIconColor = isLightMode ? 'text-black' : 'text-white';
+    const overlayBg = isLightMode ? 'bg-white/95' : 'bg-black/95';
+    const overlayText = isLightMode ? 'text-black' : 'text-white';
+
     return (
-        <div className={`relative h-screen md:hidden ${isMenuOpen ? 'overflow-hidden' : ''}`}>
+        // FIX: Use 100dvh for proper mobile viewport height
+        <div className={`relative md:hidden ${isMenuOpen ? 'overflow-hidden' : ''}`} style={{ height: '100dvh' }}>
 
             {/* ========================================== */}
-            {/* LAYER 1: TOP UI - Fixed at top & bottom   */}
+            {/* LAYER 1: TOP UI - Floating Menu           */}
             {/* ========================================== */}
 
-            {/* Menu Button - Top Right */}
-            <div className="fixed top-4 right-4 z-50">
-                <div className="flex flex-col gap-2 bg-black/20 backdrop-blur-md rounded-full p-2 border border-white/10 shadow-lg">
-                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-3 bg-white text-black rounded-full shadow-lg active:scale-90 transition-transform">
+            {/* Floating Draggable Menu Button */}
+            <div
+                ref={iconContainerRef}
+                className="fixed z-50 touch-none cursor-grab active:cursor-grabbing"
+                style={{
+                    top: `${position.y}px`,
+                    right: `${position.x}px`,
+                    willChange: 'transform'
+                }}
+            >
+                <div className={`flex flex-col gap-2 ${menuBg} backdrop-blur-md rounded-full p-2 border ${menuBorder} shadow-lg`}>
+                    <button
+                        onClick={() => !hasMoved.current && setIsMenuOpen(!isMenuOpen)}
+                        className={`p-3 ${isLightMode ? 'bg-black text-white' : 'bg-white text-black'} rounded-full shadow-lg active:scale-90 transition-transform`}
+                    >
                         {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
                     </button>
-                    <button onClick={() => setIsColorPinned(!isColorPinned)} className={`p-2.5 rounded-full transition-all ${isColorPinned ? 'bg-white text-black' : 'bg-transparent text-white'}`}>
+                    <button
+                        onClick={() => !hasMoved.current && setIsColorPinned(!isColorPinned)}
+                        className={`p-2.5 rounded-full transition-all ${isColorPinned ? (isLightMode ? 'bg-black text-white' : 'bg-white text-black') : `bg-transparent ${menuIconColor}`}`}
+                    >
                         <PinIcon size={18} className={isColorPinned ? 'fill-current' : ''} />
                     </button>
-                    <button onClick={() => setIsLightMode(!isLightMode)} className="p-2.5 rounded-full bg-transparent text-white">
+                    <button
+                        onClick={() => !hasMoved.current && setIsLightMode(!isLightMode)}
+                        className={`p-2.5 rounded-full bg-transparent ${menuIconColor}`}
+                    >
                         {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
                     </button>
                 </div>
@@ -107,8 +202,8 @@ export default function MobileLayout({
                 <div>© 2026</div>
             </div>
 
-            {/* Full Screen Menu Overlay */}
-            <div className={`fixed inset-0 z-[45] bg-black/95 backdrop-blur-xl transition-all duration-500 flex flex-col items-center justify-center gap-8 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+            {/* Full Screen Menu Overlay - Theme Aware */}
+            <div className={`fixed inset-0 z-[45] ${overlayBg} backdrop-blur-xl transition-all duration-500 flex flex-col items-center justify-center gap-8 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                 {[
                     { name: 'Home', ref: homeRef },
                     { name: 'Vinz Tan', ref: aboutRef },
@@ -117,15 +212,15 @@ export default function MobileLayout({
                     <button
                         key={item.name}
                         onClick={() => scrollToSection(item.ref)}
-                        className="text-4xl font-bold uppercase tracking-widest text-white hover:text-gray-300 transition-colors"
-                        style={{ color: item.name === 'Vinz Tan' ? nameColor : 'inherit' }}
+                        className={`text-4xl font-bold uppercase tracking-widest ${overlayText} hover:opacity-70 transition-colors`}
+                        style={{ color: item.name === 'Vinz Tan' ? nameColor : undefined }}
                     >
                         {item.name}
                     </button>
                 ))}
-                <div className="mt-8 flex gap-8 text-sm text-white/60">
-                    <a href="#" className="hover:text-white transition-colors">LinkedIn</a>
-                    <a href="mailto:hello@vinztan.com" className="hover:text-white transition-colors">Email</a>
+                <div className={`mt-8 flex gap-8 text-sm ${isLightMode ? 'text-black/60' : 'text-white/60'}`}>
+                    <a href="#" className="hover:opacity-100 transition-colors">LinkedIn</a>
+                    <a href="mailto:hello@vinztan.com" className="hover:opacity-100 transition-colors">Email</a>
                 </div>
             </div>
 
@@ -137,11 +232,10 @@ export default function MobileLayout({
                 className="absolute inset-0 z-10 overflow-y-auto overflow-x-hidden overscroll-contain"
                 style={{ WebkitOverflowScrolling: 'touch' }}
             >
-                {/* Add padding at bottom for overscroll effect */}
                 <div className="flex flex-col w-full">
 
                     {/* SECTION: HOME */}
-                    <section ref={homeRef} className="min-h-screen w-full flex flex-col justify-between px-6 py-16 relative">
+                    <section ref={homeRef} className="w-full flex flex-col justify-between px-6 py-16 relative" style={{ minHeight: '100dvh' }}>
                         {/* Top Name/Role */}
                         <div className="flex flex-col gap-2 pointer-events-none">
                             <h1 className="text-xl font-bold tracking-[0.2em] uppercase" style={{ color: nameColor }}>Vinz Tan</h1>
@@ -164,8 +258,9 @@ export default function MobileLayout({
                     </section>
 
                     {/* SECTION: ABOUT */}
-                    <section ref={aboutRef} className="min-h-screen w-full flex flex-col justify-center px-6 py-20 gap-8 relative">
-                        <h2 className="text-[15vw] font-bold uppercase tracking-tighter opacity-10 absolute top-10 right-[-5vw] pointer-events-none select-none">About</h2>
+                    {/* FIX: Removed right-[-5vw] that caused horizontal overflow */}
+                    <section ref={aboutRef} className="w-full flex flex-col justify-center px-6 py-20 gap-8 relative overflow-hidden" style={{ minHeight: '100dvh' }}>
+                        <h2 className="text-[15vw] font-bold uppercase tracking-tighter opacity-10 absolute top-10 right-0 pointer-events-none select-none">About</h2>
 
                         {/* Picture Block */}
                         <div className={`w-full aspect-square max-w-sm mx-auto rounded-2xl border ${theme.border} bg-white/5 backdrop-blur-sm relative overflow-hidden flex items-center justify-center`}>
@@ -190,8 +285,9 @@ export default function MobileLayout({
                     </section>
 
                     {/* SECTION: WORK */}
-                    <section ref={workRef} className="min-h-screen w-full flex flex-col justify-center px-6 py-20 gap-8 relative">
-                        <h2 className="text-[15vw] font-bold uppercase tracking-tighter opacity-10 absolute top-10 left-[-2vw] pointer-events-none select-none">Work</h2>
+                    {/* FIX: Removed left-[-2vw] that caused horizontal overflow */}
+                    <section ref={workRef} className="w-full flex flex-col justify-center px-6 py-20 gap-8 relative overflow-hidden" style={{ minHeight: '100dvh' }}>
+                        <h2 className="text-[15vw] font-bold uppercase tracking-tighter opacity-10 absolute top-10 left-0 pointer-events-none select-none">Work</h2>
 
                         <div className="flex flex-col items-end text-right space-y-6">
                             <h3 className="text-4xl font-bold uppercase tracking-wide" style={{ color: colorScheme.base }}>Featured Projects</h3>
