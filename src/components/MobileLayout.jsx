@@ -45,7 +45,7 @@ export default function MobileLayout({
     // FIX: Initialize to TOP RIGHT (y is distance from BOTTOM)
     const [position, setPosition] = useState(() => ({
         x: 20,
-        y: typeof window !== 'undefined' ? window.innerHeight - 160 : 600
+        y: typeof window !== 'undefined' ? window.innerHeight * 0.85 : 600
     }));
     const isDragging = useRef(false);
     const dragOffset = useRef({ x: 0, y: 0 });
@@ -263,7 +263,7 @@ export default function MobileLayout({
                 </section>
 
                 {/* Footer */}
-                <footer className="py-12 px-6 flex flex-col items-center gap-6 border-t border-white/10 bg-black/10 backdrop-blur-sm">
+                <footer className="py-12 px-6 flex flex-col items-center gap-6">
                     <div className="text-[10px] uppercase tracking-widest opacity-60">Based in Malaysia @ 2026</div>
                     <div className="flex gap-8">
                         <a href="#" className="opacity-80 hover:opacity-100 transition-opacity">LinkedIn</a>

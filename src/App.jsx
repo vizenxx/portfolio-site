@@ -310,8 +310,8 @@ export default function App() {
     <div className={`w-full min-h-screen flex items-center justify-center overflow-x-hidden`}>
       <div
         ref={containerRef}
-        className={`relative w-full max-w-[100vw] transition-all duration-500 ease-in-out font-sans ${theme.text} ${theme.selection} h-[100vh] overflow-hidden`}
-        style={{ backgroundColor: pageBg, '--muted-color': mutedColor, minHeight: '100vh' }}
+        className={`relative w-full max-w-[100vw] transition-all duration-500 ease-in-out font-sans ${theme.text} ${theme.selection} h-[120vh] overflow-hidden`}
+        style={{ backgroundColor: pageBg, '--muted-color': mutedColor, minHeight: '120vh' }}
       >
         {/* SHARED BACKGROUNDS */}
         <div className={`fixed inset-0 z-0 overflow-hidden h-[100vh]`}>
