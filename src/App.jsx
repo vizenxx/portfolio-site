@@ -316,6 +316,24 @@ export default function App() {
 
   return (
     <div className={`w-full ${isMobile ? '' : 'min-h-screen flex items-center justify-center'}`}>
+
+      {/* Mobile Layout - Rendered at Root Level to ensure top z-index priority */}
+      {isMobile && (
+        <MobileLayout
+          activePage={activePage}
+          handlePageChange={handlePageChange}
+          isLightMode={isLightMode}
+          setIsLightMode={setIsLightMode}
+          theme={theme}
+          colorScheme={colorScheme}
+          nameColor={nameColor}
+          roles={roles}
+          currentRoleIndex={currentRoleIndex}
+          isColorPinned={isColorPinned}
+          setIsColorPinned={setIsColorPinned}
+        />
+      )}
+
       <div ref={containerRef} className={`relative w-full transition-colors duration-500 ease-in-out font-sans ${theme.text} ${theme.selection} ${isMobile ? 'min-h-screen' : 'h-[100dvh] overflow-hidden'}`} style={{ backgroundColor: pageBg, '--muted-color': mutedColor }}>
 
         {/* Backgrounds - Mobile: fixed to viewport, Desktop: absolute to container */}
@@ -329,22 +347,7 @@ export default function App() {
 
         {/* CONTENT */}
         <div className={`relative z-10 ${isMobile ? '' : 'h-full w-full'}`}>
-          {/* Mobile Layout */}
-          {isMobile ? (
-            <MobileLayout
-              activePage={activePage}
-              handlePageChange={handlePageChange}
-              isLightMode={isLightMode}
-              setIsLightMode={setIsLightMode}
-              theme={theme}
-              colorScheme={colorScheme}
-              nameColor={nameColor}
-              roles={roles}
-              currentRoleIndex={currentRoleIndex}
-              isColorPinned={isColorPinned}
-              setIsColorPinned={setIsColorPinned}
-            />
-          ) : (
+          {!isMobile && (
             <DesktopLayout
               activePage={activePage}
               handlePageChange={handlePageChange}
