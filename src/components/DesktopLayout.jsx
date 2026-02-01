@@ -30,21 +30,8 @@ export default function DesktopLayout({
     const comp = useRef(null);
     const [bioIndex, setBioIndex] = useState(0);
 
-    // --- ENTRANCE ANIMATION ---
-    useLayoutEffect(() => {
-        if (!comp.current) return;
-        const ctx = gsap.context(() => {
-            const tl = gsap.timeline();
-            gsap.set(".hero-line", { x: 100, opacity: 0 });
-            gsap.set(".nav-item", { x: -20, opacity: 0 });
-            gsap.set(".theme-toggle", { x: 20, opacity: 0 });
-            gsap.set(".footer-elem", { y: 30, opacity: 0 });
+    // --- ENTRANCE ANIMATION REMOVED FOR STABILITY ---
 
-            tl.to(".hero-line", { x: 0, opacity: 1, duration: 1, stagger: 0.15, ease: "power4.out" })
-                .to([".nav-item", ".theme-toggle", ".footer-elem"], { x: 0, y: 0, opacity: 1, duration: 0.8, stagger: 0.05, ease: "power2.out" }, "<0.1");
-        }, comp);
-        return () => ctx.revert();
-    }, []);
 
     // --- BIO ROTATION ---
     useEffect(() => {
