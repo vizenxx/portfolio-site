@@ -151,7 +151,7 @@ export default function MobileLayout({
     ];
 
     return (
-        <div className={`absolute inset-0 overflow-y-auto overflow-x-hidden transition-colors duration-500 ease-in-out ${theme.text} md:hidden ${isMenuOpen ? 'overflow-y-hidden h-[100dvh]' : ''}`}>
+        <div className={`relative min-h-screen transition-colors duration-500 ease-in-out ${theme.text} md:hidden ${isMenuOpen ? 'overflow-hidden' : ''}`}>
 
             {/* Floating Controls (Menu, Theme, Pin) */}
             <div

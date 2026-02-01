@@ -310,11 +310,11 @@ export default function App() {
     <div className={`w-full min-h-screen flex items-center justify-center overflow-x-hidden`}>
       <div
         ref={containerRef}
-        className={`relative w-full max-w-[100vw] transition-all duration-500 ease-in-out font-sans ${theme.text} ${theme.selection} h-[120vh] overflow-hidden`}
-        style={{ backgroundColor: pageBg, '--muted-color': mutedColor, minHeight: '120vh' }}
+        className={`relative w-full max-w-[100vw] min-h-screen transition-all duration-500 ease-in-out font-sans ${theme.text} ${theme.selection}`}
+        style={{ backgroundColor: pageBg, '--muted-color': mutedColor }}
       >
-        {/* SHARED BACKGROUNDS */}
-        <div className={`fixed inset-0 z-0 overflow-hidden h-[100vh]`}>
+        {/* SHARED BACKGROUNDS - Fixed position to stay in place during scroll */}
+        <div className="fixed inset-0 z-0 overflow-hidden">
           <canvas ref={spotlightRef} className="absolute inset-0 z-0 transition-opacity duration-1000 scale-125 pointer-events-none" style={{ filter: 'blur(100px)' }} />
           {/* Simple Noise for Mobile? Or keep same? Keeping original logic for now */}
           <div className="absolute inset-0 z-1 pointer-events-none" style={{ backdropFilter: 'blur(30px) saturate(1.2)', WebkitBackdropFilter: 'blur(30px) saturate(1.2)', backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E")`, mixBlendMode: isLightMode ? 'plus-lighter' : 'overlay', opacity: isLightMode ? 0.6 : 0.4 }} />
