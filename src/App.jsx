@@ -240,40 +240,35 @@ export default function App() {
   useEffect(() => {
     const canvas = rippleCanvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext('2d'); let animationFrameId; let lastPos = null; const CLICK_CONFIG = { maxRadius: 500, lifespan: 4000 };
-    const resizeCanvas = () => {
-      // OPTIMIZATION: Cap pixel ratio on mobile
-      const dpr = isMobile ? Math.min(window.devicePixelRatio, 1.5) : window.devicePixelRatio;
-      // FIX 1: Use getBoundingClientRect to match displayed CSS size exactly (prevents oval distortion)
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-    };
-
-    let prevWidth = window.innerWidth;
-    const handleResize = () => {
-      const currentWidth = window.innerWidth;
-      // FIX 2: On mobile, if width hasn't changed (address bar show/hide), skip resize to prevent lag
-      if (isMobile && Math.abs(currentWidth - prevWidth) < 10) return;
-
-      prevWidth = currentWidth;
-      resizeCanvas();
-    };
-
-    window.addEventListener('resize', handleResize);
-    // Initial size
-    setTimeout(resizeCanvas, 50);
-
+    const resizeCanvas = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    window.addEventListener('resize', resizeCanvas); setTimeout(resizeCanvas, 50);
     const handleMouseMove = (e) => {
-      const x = e.clientX; const y = e.clientY; const now = Date.now();
+      const x = e.clientX;
+      const y = e.clientY;
+      const now = Date.now();
+
+      // Update cursor position (fixed, relative to viewport)
       if (cursorRef.current) cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
-      if (!lastPos) { lastPos = { x, y }; return; }
-      const dist = Math.hypot(x - lastPos.x, y - lastPos.y); const step = 2; const steps = Math.ceil(dist / step);
-      for (let i = 1; i <= steps; i++) { const t = i / steps; const rx = lastPos.x + (x - lastPos.x) * t; const ry = lastPos.y + (y - lastPos.y) * t; trailRipplesRef.current.push({ x: rx, y: ry, startTime: now, baseRadius: 5, maxRadius: 20, lifespan: 150 }); }
+
+      if (!lastPos) {
+        lastPos = { x, y };
+        return;
+      }
+      const dist = Math.hypot(x - lastPos.x, y - lastPos.y);
+      const step = 2;
+      const steps = Math.ceil(dist / step);
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const rx = lastPos.x + (x - lastPos.x) * t;
+        const ry = lastPos.y + (y - lastPos.y) * t;
+        trailRipplesRef.current.push({ x: rx, y: ry, startTime: now, baseRadius: 5, maxRadius: 20, lifespan: 150 });
+      }
       lastPos = { x, y };
     };
     window.addEventListener('mousemove', handleMouseMove);
-    const handlePointerDown = (e) => { clickRipplesRef.current.push({ x: e.clientX, y: e.clientY, startTime: Date.now(), baseRadius: 10, maxRadius: CLICK_CONFIG.maxRadius, lifespan: CLICK_CONFIG.lifespan }); };
+    const handlePointerDown = (e) => {
+      clickRipplesRef.current.push({ x: e.clientX, y: e.clientY, startTime: Date.now(), baseRadius: 10, maxRadius: CLICK_CONFIG.maxRadius, lifespan: CLICK_CONFIG.lifespan });
+    };
     window.addEventListener('pointerdown', handlePointerDown);
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -287,8 +282,8 @@ export default function App() {
       animationFrameId = requestAnimationFrame(animate);
     };
     animate();
-    return () => { window.removeEventListener('resize', handleResize); window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('pointerdown', handlePointerDown); cancelAnimationFrame(animationFrameId); };
-  }, [colorScheme.compHSL, isLightMode, isMobile]);
+    return () => { window.removeEventListener('resize', resizeCanvas); window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('pointerdown', handlePointerDown); cancelAnimationFrame(animationFrameId); };
+  }, [colorScheme.compHSL, isLightMode]);
 
   // Global Click handler for color change
   useEffect(() => {
