@@ -304,6 +304,14 @@ export default function App() {
     window.addEventListener('click', handleGlobalClick); return () => window.removeEventListener('click', handleGlobalClick);
   }, [isLightMode, isColorPinned]);
 
+  // Update meta theme color dynamically
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', isLightMode ? '#ffffff' : '#000000');
+    }
+  }, [isLightMode]);
+
   const theme = {
     text: isLightMode ? 'text-[#18181b]' : 'text-[#ededed]',
     subText: 'text-[var(--muted-color)]',
@@ -334,7 +342,7 @@ export default function App() {
         />
       )}
 
-      <div ref={containerRef} className={`relative w-full transition-colors duration-500 ease-in-out font-sans ${theme.text} ${theme.selection} ${isMobile ? 'min-h-screen' : 'h-[100dvh] overflow-hidden'}`} style={{ backgroundColor: pageBg, '--muted-color': mutedColor }}>
+      <div ref={containerRef} className={`relative w-full transition-colors duration-500 ease-in-out font-sans ${theme.text} ${theme.selection} ${isMobile ? 'min-h-[100dvh]' : 'h-[100dvh] overflow-hidden'}`} style={{ backgroundColor: pageBg, '--muted-color': mutedColor }}>
 
         {/* Backgrounds - Mobile: fixed to viewport, Desktop: absolute to container */}
         <div className={`${isMobile ? 'fixed' : 'absolute'} inset-0 z-0 pointer-events-none`}>
