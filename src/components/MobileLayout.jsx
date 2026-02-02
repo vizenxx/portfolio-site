@@ -165,28 +165,7 @@ export default function MobileLayout({
                 </div>
             </div>
 
-            {/* TOP BLUR LAYER (Between Content and Header) */}
-            {/* Uses backdrop-filter with a gradient mask on ITSELF to fade the blur effect */}
-            <div
-                className="fixed top-0 left-0 right-0 h-28 z-[35] pointer-events-none"
-                style={{
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    maskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 100%)'
-                }}
-            />
-
-            {/* BOTTOM BLUR LAYER (Between Content and Footer) */}
-            <div
-                className="fixed bottom-0 left-0 right-0 h-28 z-[35] pointer-events-none"
-                style={{
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    maskImage: 'linear-gradient(to top, black 0%, black 40%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to top, black 0%, black 40%, transparent 100%)'
-                }}
-            />
+            {/* BLUR LAYERS REMOVED FOR DEBUGGING as requested */}
 
             {/* --- FIXED UI OVERLAYS --- */}
 
@@ -274,7 +253,7 @@ export default function MobileLayout({
             {/* Bottom Left: Location/Version (Restored Fixed) */}
             <div className={`fixed bottom-6 left-6 z-40 flex flex-col gap-1 text-[10px] uppercase tracking-widest ${theme.text} transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
                 <div className="opacity-50">Based in Malaysia</div>
-                <div className="opacity-50">© 2026 (v12.45)</div>
+                <div className="opacity-50">© 2026 (v12.46)</div>
             </div>
 
             {/* Bottom Right: Scroll Indicator */}
