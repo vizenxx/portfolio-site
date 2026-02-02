@@ -24,12 +24,8 @@ export default function MobileLayout({
     const aboutRef = useRef(null);
     const workRef = useRef(null);
 
-    // Floating menu state
-    const menuRef = useRef(null);
-    const [menuPos, setMenuPos] = useState({ x: 16, y: 16 });
-    const dragging = useRef(false);
-    const dragStart = useRef({ x: 0, y: 0 });
-    const moved = useRef(false);
+    // Fixed menu state
+    // (Dragging logic removed)
 
     // Bio rotation
     useEffect(() => {
@@ -39,63 +35,9 @@ export default function MobileLayout({
         return () => clearInterval(interval);
     }, []);
 
-    // Drag handlers
-    useEffect(() => {
-        const el = menuRef.current;
-        if (!el) return;
-
-        const onStart = (x, y) => {
-            dragging.current = true;
-            moved.current = false;
-            const rect = el.getBoundingClientRect();
-            dragStart.current = { x: x - rect.left, y: y - rect.top };
-        };
-
-        const onMove = (x, y) => {
-            if (!dragging.current) return;
-            moved.current = true;
-            const newX = window.innerWidth - x - (el.offsetWidth - dragStart.current.x);
-            const newY = y - dragStart.current.y;
-            setMenuPos({
-                x: Math.max(8, Math.min(newX, window.innerWidth - el.offsetWidth - 8)),
-                y: Math.max(8, Math.min(newY, window.innerHeight - el.offsetHeight - 8))
-            });
-        };
-
-        const onEnd = () => { dragging.current = false; };
-
-        const touchStart = (e) => {
-            onStart(e.touches[0].clientX, e.touches[0].clientY);
-        };
-        const touchMove = (e) => {
-            // CRITICAL FIX: Do not block scrolling unless we are actively dragging the menu
-            if (!dragging.current) return;
-            if (e.cancelable) e.preventDefault();
-            onMove(e.touches[0].clientX, e.touches[0].clientY);
-        };
-        const mouseDown = (e) => onStart(e.clientX, e.clientY);
-        const mouseMove = (e) => onMove(e.clientX, e.clientY);
-
-        el.addEventListener('touchstart', touchStart, { passive: false });
-        window.addEventListener('touchmove', touchMove, { passive: false });
-        window.addEventListener('touchend', onEnd);
-        el.addEventListener('mousedown', mouseDown);
-        window.addEventListener('mousemove', mouseMove);
-        window.addEventListener('mouseup', onEnd);
-
-        return () => {
-            el.removeEventListener('touchstart', touchStart);
-            window.removeEventListener('touchmove', touchMove);
-            window.removeEventListener('touchend', onEnd);
-            el.removeEventListener('mousedown', mouseDown);
-            window.removeEventListener('mousemove', mouseMove);
-            window.removeEventListener('mouseup', onEnd);
-        };
-    }, []);
-
     const scrollTo = (ref) => {
-        if (ref.current && scrollRef.current) {
-            scrollRef.current.scrollTo({ top: ref.current.offsetTop, behavior: 'smooth' });
+        if (ref.current) {
+            ref.current.scrollIntoView({ behavior: 'smooth' });
             setIsMenuOpen(false);
         }
     };
@@ -130,15 +72,10 @@ export default function MobileLayout({
             {/* CONTENT WRAPPER */}
             <div className="w-full flex flex-col">
                 {/* HOME */}
-                <section ref={homeRef} className="w-full min-h-[100dvh] flex flex-col justify-between px-6 py-16">
-                    <div className="flex flex-col gap-2">
-                        <h1 className="text-xl font-bold tracking-[0.2em] uppercase" style={{ color: nameColor }}>Vinz Tan</h1>
-                        <div className="flex flex-col text-xs font-light tracking-widest opacity-80">
-                            {roles[currentRoleIndex].split(' ').map((word, i) => (
-                                <span key={i} className={i === 0 ? "font-bold" : ""}>{word}</span>
-                            ))}
-                        </div>
-                    </div>
+                <section ref={homeRef} className="w-full min-h-[100dvh] flex flex-col justify-end px-6 py-16">
+                    {/* Inline Header Removed - Moved to Fixed Layout */}
+
+                    {/* Hero Text */}
                     <div className="flex-1 flex flex-col justify-center items-end text-right py-8">
                         <div className="text-[9vw] font-bold leading-none tracking-tighter mix-blend-difference">
                             {bios[bioIndex]}
@@ -182,34 +119,56 @@ export default function MobileLayout({
                 </div>
             </div>
 
-            {/* FIXED UI - Floating Menu */}
-            <div
-                ref={menuRef}
-                className="fixed z-50 touch-none"
-                style={{ top: menuPos.y, right: menuPos.x }}
-            >
-                <div className={`flex flex-col gap-2 ${menuBg} backdrop-blur-md rounded-full p-2 border ${menuBorder} shadow-lg`}>
-                    <button onClick={() => !moved.current && setIsMenuOpen(!isMenuOpen)} className={`p-3 ${isLightMode ? 'bg-black text-white' : 'bg-white text-black'} rounded-full shadow-lg active:scale-90 transition-transform`}>
-                        {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
-                    </button>
-                    <button onClick={() => !moved.current && setIsColorPinned(!isColorPinned)} className={`p-2.5 rounded-full transition-all ${isColorPinned ? (isLightMode ? 'bg-black text-white' : 'bg-white text-black') : `bg-transparent ${menuIcon}`}`}>
-                        <PinIcon size={18} className={isColorPinned ? 'fill-current' : ''} />
-                    </button>
-                    <button onClick={() => !moved.current && setIsLightMode(!isLightMode)} className={`p-2.5 rounded-full bg-transparent ${menuIcon}`}>
-                        {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
-                    </button>
+            {/* --- FIXED UI OVERLAYS --- */}
+
+            {/* Top Left: Name & Active Page Indicator (Sticky) */}
+            <div className={`fixed top-6 left-6 z-40 flex flex-col items-start gap-1 ${theme.text} transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
+                {/* Name (Click to About) */}
+                <button onClick={() => activePage !== 'about' && handlePageChange('about')} className="flex items-center group mb-1">
+                    <span className="transition-all duration-300 mr-2" style={{
+                        width: activePage === 'about' ? '4px' : '0px',
+                        height: '1.2em',
+                        backgroundColor: colorScheme.compString,
+                        opacity: activePage === 'about' ? 1 : 0
+                    }} />
+                    <span className={`text-xl font-black tracking-[0.2em] uppercase transition-opacity duration-300 ${activePage === 'about' ? 'opacity-100' : 'opacity-70'}`} style={{ color: activePage === 'about' ? nameColor : 'inherit' }}>Vinz Tan</span>
+                </button>
+
+                {/* Current Page Title (Dynamic) */}
+                <div className="flex items-center h-4">
+                    <span className="transition-all duration-300 mr-2" style={{
+                        width: activePage !== 'about' ? '4px' : '0px',
+                        height: '1em',
+                        backgroundColor: colorScheme.compString,
+                        opacity: activePage !== 'about' ? 1 : 0
+                    }} />
+                    <span className="text-xs font-bold tracking-[0.2em] uppercase opacity-90">
+                        {activePage === 'about' ? 'ABOUT' : activePage === 'work' ? 'PROJECTS' : 'HOME'}
+                    </span>
                 </div>
             </div>
 
-            {/* Scroll Hint */}
-            <div className={`fixed bottom-6 left-6 z-40 text-[10px] uppercase tracking-widest opacity-50 animate-pulse ${theme.text} pointer-events-none`}>
-                Scroll ↓
+            {/* Top Right: Menu Trigger */}
+            <div className={`fixed top-6 right-6 z-50`}>
+                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={`flex items-center justify-center p-3 rounded-full backdrop-blur-md border shadow-lg transition-transform active:scale-90 ${theme.border} ${isLightMode ? 'bg-white/80 text-black' : 'bg-black/50 text-white'}`}>
+                    {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                </button>
             </div>
 
-            {/* Footer */}
-            <div className={`fixed bottom-6 right-6 z-40 text-[10px] uppercase tracking-widest opacity-50 text-right ${theme.text} pointer-events-none`}>
-                <div>Based in Malaysia</div>
-                <div>© 2026 (v12.23)</div>
+            {/* Bottom Left: Role & Info */}
+            <div className={`fixed bottom-6 left-6 z-40 flex flex-col gap-1 text-[10px] uppercase tracking-widest ${theme.text} transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
+                <div className="flex flex-col mb-2 opacity-80">
+                    {roles[currentRoleIndex].split(' ').map((word, i) => (
+                        <span key={i} className={i === 0 ? "font-bold" : ""}>{word}</span>
+                    ))}
+                </div>
+                <div className="opacity-50">Based in Malaysia</div>
+                <div className="opacity-50">© 2026 (v12.24)</div>
+            </div>
+
+            {/* Bottom Right: Scroll Indicator */}
+            <div className={`fixed bottom-6 right-6 z-40 transition-opacity duration-500 ${isMenuOpen ? 'opacity-0' : 'opacity-100'} ${activePage === 'work' ? 'opacity-0' : 'opacity-100'}`}>
+                <div className={`text-[10px] uppercase tracking-widest opacity-50 ${theme.text}`}>Scroll ↓</div>
             </div>
 
             {/* Menu Overlay */}
