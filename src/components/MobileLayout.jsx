@@ -130,7 +130,7 @@ export default function MobileLayout({
             {/* CONTENT WRAPPER */}
             <div className="w-full flex flex-col">
                 {/* HOME */}
-                <section ref={homeRef} className="w-full flex flex-col justify-between px-6 py-16">
+                <section ref={homeRef} className="w-full min-h-[100dvh] flex flex-col justify-between px-6 py-16">
                     <div className="flex flex-col gap-2">
                         <h1 className="text-xl font-bold tracking-[0.2em] uppercase" style={{ color: nameColor }}>Vinz Tan</h1>
                         <div className="flex flex-col text-xs font-light tracking-widest opacity-80">
@@ -209,7 +209,7 @@ export default function MobileLayout({
             {/* Footer */}
             <div className={`fixed bottom-6 right-6 z-40 text-[10px] uppercase tracking-widest opacity-50 text-right ${theme.text} pointer-events-none`}>
                 <div>Based in Malaysia</div>
-                <div>© 2026 (v12.20)</div>
+                <div>© 2026 (v12.21)</div>
             </div>
 
             {/* Menu Overlay */}
