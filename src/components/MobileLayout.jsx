@@ -93,16 +93,24 @@ export default function MobileLayout({
             {/* CONTENT WRAPPER */}
             <div className="w-full flex flex-col">
                 {/* HOME */}
-                <section ref={homeRef} className="w-full min-h-[100dvh] flex flex-col justify-end px-6 py-16">
-                    {/* Inline Header Removed - Moved to Fixed Layout */}
-
+                <section ref={homeRef} className="w-full min-h-[100dvh] flex flex-col justify-end px-6 py-24 relative">
                     {/* Hero Text */}
-                    <div className="flex-1 flex flex-col justify-center items-end text-right py-8">
+                    <div className="flex-1 flex flex-col justify-center items-end text-right py-8 z-10">
                         <div className="text-[9vw] font-bold leading-none tracking-tighter mix-blend-difference">
                             {bios[bioIndex]}
                         </div>
                     </div>
-                    <div className="h-16"></div>
+
+                    {/* Role & Info (Scrollable within Home) */}
+                    <div className={`flex flex-col gap-2 z-10 mt-12 mb-6 ${theme.text}`}>
+                        <h2 className="text-2xl font-bold uppercase tracking-wide leading-tight max-w-[80%]">
+                            {roles[currentRoleIndex]}
+                        </h2>
+                        <div className="flex flex-col text-[10px] uppercase tracking-widest opacity-60">
+                            <span>Based in Malaysia</span>
+                            <span>© 2026 (v12.26)</span>
+                        </div>
+                    </div>
                 </section>
 
                 {/* ABOUT */}
@@ -135,35 +143,43 @@ export default function MobileLayout({
                 </section>
 
                 {/* END */}
-                <div className="h-32 flex items-center justify-center">
+                <div className="pb-8 pt-32 flex items-end justify-center min-h-[50vh]">
                     <span className={`text-[10px] uppercase tracking-widest ${theme.subText} opacity-50`}>— End —</span>
                 </div>
             </div>
+            {/* Top Gradient Mask for Scrolling Content */}
+            <div className={`fixed top-0 left-0 right-0 h-32 z-30 pointer-events-none transition-opacity duration-500`}
+                style={{
+                    background: isLightMode
+                        ? 'linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.8) 40%, rgba(255,255,255,0) 100%)'
+                        : 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%)'
+                }}
+            />
 
             {/* --- FIXED UI OVERLAYS --- */}
 
             {/* Top Left: Desktop-style Nav (Sticky) */}
-            <div className={`fixed top-6 left-6 z-40 flex flex-col items-start gap-1 ${theme.text} transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
-                {/* Vinz Tan (Home/About) */}
-                <button onClick={() => handlePageChange('about')} className="flex items-center group h-6">
-                    <span className="transition-all duration-300 mr-2" style={{
-                        width: (activePage === 'about' || activePage === 'home') ? '4px' : '0px',
-                        height: '1.2em',
+            <div className={`fixed top-6 left-6 z-40 flex flex-col items-start gap-3 ${theme.text} transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
+                {/* Vinz Tan (About) - Active only on About */}
+                <button onClick={() => handlePageChange('about')} className="flex items-center group h-5">
+                    <span className="transition-all duration-300 mr-3" style={{
+                        width: activePage === 'about' ? '4px' : '0px',
+                        height: '100%',
                         backgroundColor: colorScheme.compString,
-                        opacity: (activePage === 'about' || activePage === 'home') ? 1 : 0
+                        opacity: activePage === 'about' ? 1 : 0
                     }} />
-                    <span className={`text-xl font-black tracking-[0.2em] uppercase transition-opacity duration-300 ${(activePage === 'about' || activePage === 'home') ? 'opacity-100' : 'opacity-60'}`} style={{ color: (activePage === 'about' || activePage === 'home') ? nameColor : 'inherit' }}>Vinz Tan</span>
+                    <span className={`text-lg font-black tracking-[0.2em] uppercase transition-opacity duration-300 ${activePage === 'about' ? 'opacity-100' : 'opacity-60'}`} style={{ color: activePage === 'about' ? nameColor : 'inherit' }}>Vinz Tan</span>
                 </button>
 
-                {/* Projects (Work) */}
-                <button onClick={() => handlePageChange('work')} className="flex items-center group h-6">
-                    <span className="transition-all duration-300 mr-2" style={{
+                {/* Projects (Work) - Active only on Work */}
+                <button onClick={() => handlePageChange('work')} className="flex items-center group h-5">
+                    <span className="transition-all duration-300 mr-3" style={{
                         width: activePage === 'work' ? '4px' : '0px',
-                        height: '1.2em', // Matching height
+                        height: '100%',
                         backgroundColor: colorScheme.compString,
                         opacity: activePage === 'work' ? 1 : 0
                     }} />
-                    <span className={`text-xl font-medium tracking-[0.2em] uppercase transition-opacity duration-300 ${activePage === 'work' ? 'opacity-100 font-bold' : 'opacity-60'}`} style={{ color: activePage === 'work' ? colorScheme.base : 'inherit' }}>
+                    <span className={`text-base font-bold tracking-[0.2em] uppercase transition-opacity duration-300 ${activePage === 'work' ? 'opacity-100' : 'opacity-60'}`} style={{ color: activePage === 'work' ? colorScheme.base : 'inherit' }}>
                         Projects
                     </span>
                 </button>
@@ -187,16 +203,7 @@ export default function MobileLayout({
                 </div>
             </div>
 
-            {/* Bottom Left: Role & Info */}
-            <div className={`fixed bottom-6 left-6 z-40 flex flex-col gap-1 text-[10px] uppercase tracking-widest ${theme.text} transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
-                <div className="flex flex-col mb-2 opacity-80">
-                    {roles[currentRoleIndex].split(' ').map((word, i) => (
-                        <span key={i} className={i === 0 ? "font-bold" : ""}>{word}</span>
-                    ))}
-                </div>
-                <div className="opacity-50">Based in Malaysia</div>
-                <div className="opacity-50">© 2026 (v12.25)</div>
-            </div>
+            {/* Bottom Left: Fixed Area Removed (Moved to Home Section) */}
 
             {/* Bottom Right: Scroll Indicator */}
             <div className={`fixed bottom-6 right-6 z-40 transition-opacity duration-500 ${isMenuOpen ? 'opacity-0' : 'opacity-100'} ${activePage === 'work' ? 'opacity-0' : 'opacity-100'}`}>
