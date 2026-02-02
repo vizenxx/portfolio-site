@@ -87,8 +87,9 @@ export default function MobileLayout({
     const overlayText = isLightMode ? 'text-black' : 'text-white';
 
     return (
-        // NATURAL SCROLL CONTAINER
-        <div className="relative w-full z-40">
+        // NATURAL SCROLL CONTAINER with Top Fade Mask
+        // Fades in the top 120px to avoid hard overlap with the sticky header
+        <div className="relative w-full z-40" style={{ maskImage: 'linear-gradient(to bottom, transparent 0px, black 120px, black 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0px, black 120px, black 100%)' }}>
 
             {/* CONTENT WRAPPER */}
             <div className="w-full flex flex-col">
@@ -101,15 +102,11 @@ export default function MobileLayout({
                         </div>
                     </div>
 
-                    {/* Role & Info (Scrollable within Home) */}
+                    {/* Role (Scrollable within Home) */}
                     <div className={`flex flex-col gap-2 z-10 mt-12 mb-6 ${theme.text}`}>
-                        <h2 className="text-2xl font-bold uppercase tracking-wide leading-tight max-w-[80%]">
+                        <h2 className="text-2xl font-bold uppercase tracking-wide leading-tight max-w-[90%]">
                             {roles[currentRoleIndex]}
                         </h2>
-                        <div className="flex flex-col text-[10px] uppercase tracking-widest opacity-60">
-                            <span>Based in Malaysia</span>
-                            <span>© 2026 (v12.26)</span>
-                        </div>
                     </div>
                 </section>
 
@@ -143,24 +140,18 @@ export default function MobileLayout({
                 </section>
 
                 {/* END */}
-                <div className="pb-8 pt-32 flex items-end justify-center min-h-[50vh]">
+                <div className="pb-8 pt-48 flex items-end justify-center min-h-[50vh]">
                     <span className={`text-[10px] uppercase tracking-widest ${theme.subText} opacity-50`}>— End —</span>
                 </div>
             </div>
-            {/* Top Gradient Mask for Scrolling Content */}
-            <div className={`fixed top-0 left-0 right-0 h-32 z-30 pointer-events-none transition-opacity duration-500`}
-                style={{
-                    background: isLightMode
-                        ? 'linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.8) 40%, rgba(255,255,255,0) 100%)'
-                        : 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%)'
-                }}
-            />
+            {/* Top Gradient Overlay REMOVED (Using mask instead) */}
 
             {/* --- FIXED UI OVERLAYS --- */}
 
             {/* Top Left: Desktop-style Nav (Sticky) */}
             <div className={`fixed top-6 left-6 z-40 flex flex-col items-start gap-3 ${theme.text} transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
                 {/* Vinz Tan (About) - Active only on About */}
+                {/* Vinz Tan (About) - Always color */}
                 <button onClick={() => handlePageChange('about')} className="flex items-center group h-5">
                     <span className="transition-all duration-300 mr-3" style={{
                         width: activePage === 'about' ? '4px' : '0px',
@@ -168,7 +159,7 @@ export default function MobileLayout({
                         backgroundColor: colorScheme.compString,
                         opacity: activePage === 'about' ? 1 : 0
                     }} />
-                    <span className={`text-lg font-black tracking-[0.2em] uppercase transition-opacity duration-300 ${activePage === 'about' ? 'opacity-100' : 'opacity-60'}`} style={{ color: activePage === 'about' ? nameColor : 'inherit' }}>Vinz Tan</span>
+                    <span className={`text-lg font-black tracking-[0.2em] uppercase transition-opacity duration-300 ${activePage === 'about' ? 'opacity-100' : 'opacity-80'}`} style={{ color: nameColor }}>Vinz Tan</span>
                 </button>
 
                 {/* Projects (Work) - Active only on Work */}
@@ -203,7 +194,11 @@ export default function MobileLayout({
                 </div>
             </div>
 
-            {/* Bottom Left: Fixed Area Removed (Moved to Home Section) */}
+            {/* Bottom Left: Location/Version (Restored Fixed) */}
+            <div className={`fixed bottom-6 left-6 z-40 flex flex-col gap-1 text-[10px] uppercase tracking-widest ${theme.text} transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
+                <div className="opacity-50">Based in Malaysia</div>
+                <div className="opacity-50">© 2026 (v12.27)</div>
+            </div>
 
             {/* Bottom Right: Scroll Indicator */}
             <div className={`fixed bottom-6 right-6 z-40 transition-opacity duration-500 ${isMenuOpen ? 'opacity-0' : 'opacity-100'} ${activePage === 'work' ? 'opacity-0' : 'opacity-100'}`}>
