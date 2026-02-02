@@ -211,8 +211,8 @@ export default function MobileLayout({
                 <div
                     className={`flex items-center gap-1 p-1.5 rounded-full border shadow-lg transition-colors duration-300 ${theme.border}`}
                     style={{
-                        backdropFilter: 'blur(20px) saturate(1.5)',
-                        WebkitBackdropFilter: 'blur(20px) saturate(1.5)',
+                        backdropFilter: 'blur(8px) saturate(1.5)',
+                        WebkitBackdropFilter: 'blur(8px) saturate(1.5)',
                         backgroundColor: isLightMode ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)'
                     }}
                 >
@@ -253,7 +253,7 @@ export default function MobileLayout({
             {/* Bottom Left: Location/Version (Restored Fixed) */}
             <div className={`fixed bottom-6 left-6 z-40 flex flex-col gap-1 text-[10px] uppercase tracking-widest ${theme.text} transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
                 <div className="opacity-50">Based in Malaysia</div>
-                <div className="opacity-50">© 2026 (v12.50)</div>
+                <div className="opacity-50">© 2026 (v12.51)</div>
             </div>
 
             {/* Bottom Right: Scroll Indicator */}

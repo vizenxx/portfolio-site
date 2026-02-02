@@ -204,8 +204,8 @@ export default function App() {
 
   // ========== GLOBAL BACKGROUND COLORS ==========
   // ========== GLOBAL BACKGROUND COLORS ==========
-  const BG_DARK = '#90ee90';    // Light Green (User Req)
-  const BG_LIGHT = '#add8e6';   // Light Blue (User Req)
+  const BG_DARK = '#050505';    // Super dark grey
+  const BG_LIGHT = '#fafafa';   // Super light grey
   // ================================================
   // ================================================
 
