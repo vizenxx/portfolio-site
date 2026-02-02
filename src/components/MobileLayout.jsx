@@ -87,12 +87,11 @@ export default function MobileLayout({
     const overlayText = isLightMode ? 'text-black' : 'text-white';
 
     return (
-        // NATURAL SCROLL CONTAINER with Top Fade Mask
-        // Fades in the top 120px to avoid hard overlap with the sticky header
-        <div className="relative w-full z-40" style={{ maskImage: 'linear-gradient(to bottom, transparent 0px, black 120px, black 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0px, black 120px, black 100%)' }}>
+        // NATURAL SCROLL CONTAINER
+        <div className="relative w-full z-40">
 
-            {/* CONTENT WRAPPER */}
-            <div className="w-full flex flex-col">
+            {/* CONTENT WRAPPER - Mask applied HERE to only fade scrolling content */}
+            <div className="w-full flex flex-col" style={{ maskImage: 'linear-gradient(to bottom, transparent 0px, black 120px, black 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0px, black 120px, black 100%)' }}>
                 {/* HOME */}
                 <section ref={homeRef} className="w-full min-h-[100dvh] flex flex-col justify-end px-6 py-24 relative">
                     {/* Hero Text */}
@@ -200,7 +199,7 @@ export default function MobileLayout({
             {/* Bottom Left: Location/Version (Restored Fixed) */}
             <div className={`fixed bottom-6 left-6 z-40 flex flex-col gap-1 text-[10px] uppercase tracking-widest ${theme.text} transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
                 <div className="opacity-50">Based in Malaysia</div>
-                <div className="opacity-50">© 2026 (v12.28)</div>
+                <div className="opacity-50">© 2026 (v12.29)</div>
             </div>
 
             {/* Bottom Right: Scroll Indicator */}
