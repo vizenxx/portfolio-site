@@ -104,9 +104,12 @@ export default function MobileLayout({
 
                     {/* Role (Scrollable within Home) */}
                     <div className={`flex flex-col gap-2 z-10 mt-12 mb-6 ${theme.text}`}>
-                        <h2 className="text-2xl font-bold uppercase tracking-wide leading-tight max-w-[90%]">
-                            {roles[currentRoleIndex]}
-                        </h2>
+                        {/* Constrained container matching "Based in Malaysia" width approx */}
+                        <div className="w-[180px] flex flex-col justify-end">
+                            <h2 className="text-2xl font-bold uppercase tracking-wide leading-tight break-words">
+                                {roles[currentRoleIndex]}
+                            </h2>
+                        </div>
                     </div>
                 </section>
 
@@ -140,7 +143,7 @@ export default function MobileLayout({
                 </section>
 
                 {/* END */}
-                <div className="pb-8 pt-48 flex items-end justify-center min-h-[50vh]">
+                <div className="pb-8 pt-8 flex items-end justify-center min-h-[30vh]">
                     <span className={`text-[10px] uppercase tracking-widest ${theme.subText} opacity-50`}>— End —</span>
                 </div>
             </div>
@@ -197,7 +200,7 @@ export default function MobileLayout({
             {/* Bottom Left: Location/Version (Restored Fixed) */}
             <div className={`fixed bottom-6 left-6 z-40 flex flex-col gap-1 text-[10px] uppercase tracking-widest ${theme.text} transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
                 <div className="opacity-50">Based in Malaysia</div>
-                <div className="opacity-50">© 2026 (v12.27)</div>
+                <div className="opacity-50">© 2026 (v12.28)</div>
             </div>
 
             {/* Bottom Right: Scroll Indicator */}
