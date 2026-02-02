@@ -209,7 +209,7 @@ export default function MobileLayout({
             {/* Footer */}
             <div className={`fixed bottom-6 right-6 z-40 text-[10px] uppercase tracking-widest opacity-50 text-right ${theme.text} pointer-events-none`}>
                 <div>Based in Malaysia</div>
-                <div>© 2026 (v12.22)</div>
+                <div>© 2026 (v12.23)</div>
             </div>
 
             {/* Menu Overlay */}
