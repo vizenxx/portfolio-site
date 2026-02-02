@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { ReactLenis } from '@studio-freight/react-lenis'
 import gsap from 'gsap';
 
 // Components
@@ -323,66 +324,68 @@ export default function App() {
   };
 
   return (
-    <div className={`w-full ${isMobile ? '' : 'min-h-screen flex items-center justify-center'}`}>
+    <ReactLenis root>
+      <div className={`w-full ${isMobile ? '' : 'min-h-screen flex items-center justify-center'}`}>
 
-      <div ref={containerRef} className={`relative w-full transition-colors duration-500 ease-in-out font-sans ${theme.text} ${theme.selection} ${isMobile ? 'fixed -top-[10vh] left-0 w-full h-[120vh] overflow-hidden' : 'h-[100dvh] overflow-hidden'}`} style={{ backgroundColor: pageBg, '--muted-color': mutedColor }}>
+        <div ref={containerRef} className={`relative w-full transition-colors duration-500 ease-in-out font-sans ${theme.text} ${theme.selection} ${isMobile ? 'min-h-screen' : 'h-[100dvh] overflow-hidden'}`} style={{ backgroundColor: pageBg, '--muted-color': mutedColor }}>
 
-        {/* Backgrounds - Mobile: fixed to viewport, Desktop: absolute to container */}
-        <div className={`${isMobile ? 'fixed' : 'absolute'} inset-0 z-0 pointer-events-none`}>
-          <canvas ref={spotlightRef} className="absolute inset-0 z-0 transition-opacity duration-1000 scale-125 pointer-events-none" style={{ filter: isMobile ? 'blur(40px)' : 'blur(100px)' }} />
-          <div className="absolute inset-0 z-1 pointer-events-none" style={{ backdropFilter: isMobile ? 'none' : 'blur(30px) saturate(1.2)', WebkitBackdropFilter: isMobile ? 'none' : 'blur(30px) saturate(1.2)', backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E")`, mixBlendMode: isLightMode ? 'plus-lighter' : 'overlay', opacity: isLightMode ? 0.6 : 0.4 }} />
+          {/* Backgrounds - Mobile: fixed to viewport, Desktop: absolute to container */}
+          <div className={`${isMobile ? 'fixed' : 'absolute'} inset-0 z-0 pointer-events-none`}>
+            <canvas ref={spotlightRef} className="absolute inset-0 z-0 transition-opacity duration-1000 scale-125 pointer-events-none" style={{ filter: isMobile ? 'blur(40px)' : 'blur(100px)' }} />
+            <div className="absolute inset-0 z-1 pointer-events-none" style={{ backdropFilter: isMobile ? 'none' : 'blur(30px) saturate(1.2)', WebkitBackdropFilter: isMobile ? 'none' : 'blur(30px) saturate(1.2)', backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E")`, mixBlendMode: isLightMode ? 'plus-lighter' : 'overlay', opacity: isLightMode ? 0.6 : 0.4 }} />
+          </div>
+          <canvas ref={rippleCanvasRef} className="fixed inset-0 pointer-events-none z-20" />
+          {!isMobile && <div ref={cursorRef} className={`fixed top-0 left-0 w-6 h-6 border ${isLightMode ? 'border-black' : 'border-white'} rounded-full pointer-events-none z-[60] mix-blend-difference -translate-x-1/2 -translate-y-1/2 hidden md:block transition-transform duration-75 ease-out`} />}
+          {!isMobile && <div className="fixed inset-0 pointer-events-none z-[50] opacity-[0.07] mix-blend-overlay user-select-none"><svg className="w-full h-full"><filter id="globalNoise"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" /></filter><rect width="100%" height="100%" filter="url(#globalNoise)" /></svg></div>}
+
+          {/* CONTENT */}
+          <div className={`relative z-10 ${isMobile ? '' : 'h-full w-full'}`}>
+            {!isMobile && (
+              <DesktopLayout
+                activePage={activePage}
+                handlePageChange={handlePageChange}
+                clickedItem={clickedItem}
+                setClickedItem={setClickedItem}
+                hoveredNav={hoveredNav}
+                setHoveredNav={setHoveredNav}
+                isLightMode={isLightMode}
+                setIsLightMode={setIsLightMode}
+                theme={theme}
+                colorScheme={colorScheme}
+                nameColor={nameColor}
+                roles={roles}
+                currentRoleIndex={currentRoleIndex}
+                isRoleHovered={isRoleHovered}
+                setIsRoleHovered={setIsRoleHovered}
+                bioRef={bioRef}
+                aboutContentRef={aboutContentRef}
+                hoveredEl={hoveredEl}
+                setHoveredEl={setHoveredEl}
+                isColorPinned={isColorPinned}
+                setIsColorPinned={setIsColorPinned}
+              />
+            )}
+          </div>
+
         </div>
-        <canvas ref={rippleCanvasRef} className="fixed inset-0 pointer-events-none z-20" />
-        {!isMobile && <div ref={cursorRef} className={`fixed top-0 left-0 w-6 h-6 border ${isLightMode ? 'border-black' : 'border-white'} rounded-full pointer-events-none z-[60] mix-blend-difference -translate-x-1/2 -translate-y-1/2 hidden md:block transition-transform duration-75 ease-out`} />}
-        {!isMobile && <div className="fixed inset-0 pointer-events-none z-[50] opacity-[0.07] mix-blend-overlay user-select-none"><svg className="w-full h-full"><filter id="globalNoise"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" /></filter><rect width="100%" height="100%" filter="url(#globalNoise)" /></svg></div>}
 
-        {/* CONTENT */}
-        <div className={`relative z-10 ${isMobile ? '' : 'h-full w-full'}`}>
-          {!isMobile && (
-            <DesktopLayout
-              activePage={activePage}
-              handlePageChange={handlePageChange}
-              clickedItem={clickedItem}
-              setClickedItem={setClickedItem}
-              hoveredNav={hoveredNav}
-              setHoveredNav={setHoveredNav}
-              isLightMode={isLightMode}
-              setIsLightMode={setIsLightMode}
-              theme={theme}
-              colorScheme={colorScheme}
-              nameColor={nameColor}
-              roles={roles}
-              currentRoleIndex={currentRoleIndex}
-              isRoleHovered={isRoleHovered}
-              setIsRoleHovered={setIsRoleHovered}
-              bioRef={bioRef}
-              aboutContentRef={aboutContentRef}
-              hoveredEl={hoveredEl}
-              setHoveredEl={setHoveredEl}
-              isColorPinned={isColorPinned}
-              setIsColorPinned={setIsColorPinned}
-            />
-          )}
-        </div>
-
+        {/* Mobile Layout - Rendered LAST to ensure top z-index priority and clickable */}
+        {isMobile && (
+          <MobileLayout
+            activePage={activePage}
+            handlePageChange={handlePageChange}
+            isLightMode={isLightMode}
+            setIsLightMode={setIsLightMode}
+            theme={theme}
+            colorScheme={colorScheme}
+            nameColor={nameColor}
+            roles={roles}
+            currentRoleIndex={currentRoleIndex}
+            isColorPinned={isColorPinned}
+            setIsColorPinned={setIsColorPinned}
+          />
+        )}
       </div>
-
-      {/* Mobile Layout - Rendered LAST to ensure top z-index priority and clickable */}
-      {isMobile && (
-        <MobileLayout
-          activePage={activePage}
-          handlePageChange={handlePageChange}
-          isLightMode={isLightMode}
-          setIsLightMode={setIsLightMode}
-          theme={theme}
-          colorScheme={colorScheme}
-          nameColor={nameColor}
-          roles={roles}
-          currentRoleIndex={currentRoleIndex}
-          isColorPinned={isColorPinned}
-          setIsColorPinned={setIsColorPinned}
-        />
-      )}
-    </div>
+    </ReactLenis>
   );
 }

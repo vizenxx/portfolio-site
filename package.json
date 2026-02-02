@@ -12,6 +12,7 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@studio-freight/react-lenis": "^0.0.47",
     "gsap": "^3.14.2",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",

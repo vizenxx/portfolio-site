@@ -138,7 +138,7 @@ export default function MobileLayout({
             {/* SCROLL CONTENT */}
             <div className="flex flex-col w-full">
                 {/* HOME */}
-                <section ref={homeRef} className="min-h-[100dvh] w-full flex flex-col justify-between px-6 py-16">
+                <section ref={homeRef} className="min-h-screen w-full flex flex-col justify-between px-6 py-16">
                     <div className="flex flex-col gap-2">
                         <h1 className="text-xl font-bold tracking-[0.2em] uppercase" style={{ color: nameColor }}>Vinz Tan</h1>
                         <div className="flex flex-col text-xs font-light tracking-widest opacity-80">
@@ -156,7 +156,7 @@ export default function MobileLayout({
                 </section>
 
                 {/* ABOUT */}
-                <section ref={aboutRef} className="min-h-[100dvh] w-full flex flex-col justify-center px-6 py-20 gap-8 relative overflow-hidden">
+                <section ref={aboutRef} className="min-h-screen w-full flex flex-col justify-center px-6 py-20 gap-8 relative overflow-hidden">
                     <h2 className="text-[15vw] font-bold uppercase tracking-tighter opacity-10 absolute top-10 right-0 pointer-events-none select-none">About</h2>
                     <div className={`w-full aspect-square max-w-sm mx-auto rounded-2xl border ${theme.border} bg-white/5 backdrop-blur-sm flex items-center justify-center`}>
                         <span className={`text-sm uppercase tracking-widest ${theme.subText}`}>Picture</span>
@@ -173,7 +173,7 @@ export default function MobileLayout({
                 </section>
 
                 {/* WORK */}
-                <section ref={workRef} className="min-h-[100dvh] w-full flex flex-col justify-center px-6 py-20 gap-8 relative overflow-hidden">
+                <section ref={workRef} className="min-h-screen w-full flex flex-col justify-center px-6 py-20 gap-8 relative overflow-hidden">
                     <h2 className="text-[15vw] font-bold uppercase tracking-tighter opacity-10 absolute top-10 left-0 pointer-events-none select-none">Work</h2>
                     <div className="flex flex-col items-end text-right space-y-6">
                         <h3 className="text-4xl font-bold uppercase tracking-wide" style={{ color: colorScheme.base }}>Featured Projects</h3>
@@ -217,7 +217,7 @@ export default function MobileLayout({
             {/* Footer */}
             <div className={`fixed bottom-6 right-6 z-40 text-[10px] uppercase tracking-widest opacity-50 text-right ${theme.text} pointer-events-none`}>
                 <div>Based in Malaysia</div>
-                <div>© 2026 (v11: Hybrid)</div>
+                <div>© 2026 (v12: GCIT Clone)</div>
             </div>
 
             {/* Menu Overlay */}
