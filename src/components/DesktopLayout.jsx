@@ -52,7 +52,7 @@ export default function DesktopLayout({
         (
             <>
                 <div className="hero-line flex flex-wrap justify-end gap-[1.5vw]"><span className={`${theme.highlight}`}><HackerText text="EMPOWERING" /></span></div>
-                <div className="hero-line flex flex-wrap justify-end gap-[1.5vw]"><span className={`${theme.muted}`}><HackerText text="Creative" /></span><span className={`${theme.highlight}`}><HackerText text="TEAMS" /></span><span className={`${theme.muted}`}><HackerText text="to" /></span><span className={`${theme.highlight}`}><HackerText text="SCALE" /></span></div>
+                <div className="hero-line flex flex-wrap justify-end gap-[1.5vw]"><span className={`${theme.highlight}`}><HackerText text="Creative" /></span><span className={`${theme.highlight}`}><HackerText text="TEAMS" /></span><span className={`${theme.muted}`}><HackerText text="to" /></span><span className={`${theme.highlight}`}><HackerText text="SCALE" /></span></div>
                 <div className="hero-line flex flex-wrap justify-end gap-[1.5vw]"><span className={`${theme.highlight}`}><HackerText text="PRODUCTION" /></span><span className={`${theme.muted}`}><HackerText text="without" /></span></div>
                 <div className="hero-line flex flex-wrap justify-end gap-[1.5vw]"><span className={`${theme.muted}`}><HackerText text="compromising" /></span><span className={`${theme.highlight}`}><HackerText text="INTEGRITY" /></span></div>
             </>

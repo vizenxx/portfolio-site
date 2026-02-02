@@ -203,10 +203,21 @@ export default function App() {
   useEffect(() => { if (!isColorPinned) setNameColor(getContrastSafeColor(isLightMode)); }, [isLightMode, isColorPinned]);
 
   const { pageBg, mutedColor } = useMemo(() => {
-    const { h, l } = colorScheme.compHSL; const sBg = 5; const lBg = isLightMode ? 88 : 8; const sMuted = 10;
+    let { h } = colorScheme.compHSL;
+    const { l } = colorScheme.compHSL;
+
+    // CUSTOM: Mobile Background - Grey Green (Re-applied)
+    let sBg = 5;
+    if (isMobile) {
+      h = 140; // Green Hue
+      sBg = 15; // Slightly more saturated
+    }
+
+    const lBg = isLightMode ? 88 : 12;
+    const sMuted = 10;
     let lMuted = isLightMode ? (l - 5) : (l + 5); lMuted = Math.max(0, Math.min(100, lMuted));
     return { pageBg: HSLToRGBString(h, sBg, lBg), mutedColor: HSLToRGBString(h, sMuted, lMuted) };
-  }, [colorScheme, isLightMode]);
+  }, [colorScheme, isLightMode, isMobile]);
 
   const cursorRef = useRef(null); const spotlightRef = useRef(null); const rippleCanvasRef = useRef(null);
 

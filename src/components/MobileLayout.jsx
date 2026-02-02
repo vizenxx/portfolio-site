@@ -26,10 +26,9 @@ export default function MobileLayout({
 
     // Floating menu state
     const menuRef = useRef(null);
-    const [menuPos, setMenuPos] = useState({ x: 16, y: 64 });
+    const [menuPos, setMenuPos] = useState({ x: 16, y: 16 });
     const dragging = useRef(false);
     const dragStart = useRef({ x: 0, y: 0 });
-    const dragStartRaw = useRef({ x: 0, y: 0 });
     const moved = useRef(false);
 
     // Bio rotation
@@ -48,25 +47,18 @@ export default function MobileLayout({
         const onStart = (x, y) => {
             dragging.current = true;
             moved.current = false;
-            dragStartRaw.current = { x, y };
             const rect = el.getBoundingClientRect();
             dragStart.current = { x: x - rect.left, y: y - rect.top };
         };
 
         const onMove = (x, y) => {
             if (!dragging.current) return;
-
-            // Threshold check for click vs drag
-            const dx = Math.abs(x - dragStartRaw.current.x);
-            const dy = Math.abs(y - dragStartRaw.current.y);
-            if (dx < 5 && dy < 5) return;
-
             moved.current = true;
             const newX = window.innerWidth - x - (el.offsetWidth - dragStart.current.x);
             const newY = y - dragStart.current.y;
             setMenuPos({
                 x: Math.max(8, Math.min(newX, window.innerWidth - el.offsetWidth - 8)),
-                y: Math.max(64, Math.min(newY, window.innerHeight - el.offsetHeight - 8))
+                y: Math.max(8, Math.min(newY, window.innerHeight - el.offsetHeight - 8))
             });
         };
 
@@ -111,7 +103,7 @@ export default function MobileLayout({
     const bios = [
         <div className="flex flex-col gap-2 w-full">
             <div className="flex flex-wrap justify-end gap-2"><span className={theme.highlight}><HackerText text="EMPOWERING" /></span></div>
-            <div className="flex flex-wrap justify-end gap-2"><span className={theme.muted}><HackerText text="Creative" /></span><span className={theme.highlight}><HackerText text="TEAMS" /></span><span className={theme.muted}><HackerText text="to" /></span></div>
+            <div className="flex flex-wrap justify-end gap-2"><span className={theme.highlight}><HackerText text="Creative" /></span><span className={theme.highlight}><HackerText text="TEAMS" /></span><span className={theme.muted}><HackerText text="to" /></span></div>
             <div className="flex flex-wrap justify-end gap-2"><span className={theme.highlight}><HackerText text="SCALE" /></span><span className={theme.highlight}><HackerText text="PRODUCTION" /></span></div>
             <div className="flex flex-wrap justify-end gap-2"><span className={theme.muted}><HackerText text="without" /></span><span className={theme.muted}><HackerText text="compromising" /></span></div>
             <div className="flex flex-wrap justify-end gap-2"><span className={theme.highlight}><HackerText text="INTEGRITY" /></span></div>
@@ -132,11 +124,15 @@ export default function MobileLayout({
     const overlayText = isLightMode ? 'text-black' : 'text-white';
 
     return (
-        // NATURAL FLOW CONTAINER - No fixed wrapper, let it stack
-        <div className="relative w-full overflow-x-hidden" style={{ touchAction: 'auto' }}>
+        // FIXED CONTAINER - Takes full viewport, contains scroll area
+        <div className="fixed inset-0 z-40" style={{ touchAction: 'pan-y' }}>
 
-            {/* SCROLL CONTENT */}
-            <div className="flex flex-col w-full">
+            {/* SCROLL CONTAINER - This is what scrolls */}
+            <div
+                ref={scrollRef}
+                className="absolute inset-0 overflow-y-auto overflow-x-hidden"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+            >
                 {/* HOME */}
                 <section ref={homeRef} className="min-h-screen w-full flex flex-col justify-between px-6 py-16">
                     <div className="flex flex-col gap-2">
@@ -217,7 +213,7 @@ export default function MobileLayout({
             {/* Footer */}
             <div className={`fixed bottom-6 right-6 z-40 text-[10px] uppercase tracking-widest opacity-50 text-right ${theme.text} pointer-events-none`}>
                 <div>Based in Malaysia</div>
-                <div>© 2026 (v12: GCIT Clone)</div>
+                <div>© 2026</div>
             </div>
 
             {/* Menu Overlay */}
