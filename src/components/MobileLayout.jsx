@@ -133,7 +133,7 @@ export default function MobileLayout({
 
     return (
         // FIXED CONTAINER - Takes full viewport, contains scroll area
-        <div className="h-min-[100dvh] fixed inset-0 z-40" style={{ touchAction: 'pan-y' }}>
+        <div className="min-h-[100dvh] fixed inset-0 z-40" style={{ touchAction: 'pan-y' }}>
 
             {/* SCROLL CONTAINER - This is what scrolls */}
             <div
