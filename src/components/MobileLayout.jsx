@@ -257,7 +257,7 @@ export default function MobileLayout({
 
     return (
         // NATURAL SCROLL CONTAINER (No mask for performance)
-        <div className="relative w-full z-40" onClick={() => setIsRoleExpanded(false)}>
+        <div className={`relative w-full z-40 ${theme.text}`} onClick={() => setIsRoleExpanded(false)}>
 
 
 
@@ -317,7 +317,7 @@ export default function MobileLayout({
                                             <div style={isFirst && !isRoleExpanded ? { animation: 'slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards' } : {}}>
                                                 <h2 className="text-sm uppercase tracking-[0.15em] font-medium leading-[1.4] break-words">
                                                     {role.split(' ').map((word, i) => (
-                                                        <span key={i} className={i === 0 ? 'font-bold block text-base' : 'opacity-40 block'}>{word}</span>
+                                                        <span key={i} className={i === 0 ? 'font-bold block text-base' : `${isLightMode ? 'opacity-50' : 'opacity-40'} block`}>{word}</span>
                                                     ))}
                                                 </h2>
                                             </div>
@@ -348,24 +348,24 @@ export default function MobileLayout({
                             <div key={i} className={`px-3 py-2 rounded border ${theme.border} text-center uppercase tracking-wider text-[10px]`}>{skill}</div>
                         ))}
                     </div>
-                    <div className={`${theme.text} p-4 rounded-xl bg-black/5 backdrop-blur-sm text-sm leading-relaxed text-justify space-y-4 border ${theme.border}`}>
+                    <div className={`${theme.text} p-4 rounded-xl bg-black/5 backdrop-blur-sm text-base leading-relaxed text-justify space-y-4 border ${theme.border}`}>
                         <p>Hi, I'm Vinz, I help Creative Teams escape production limits and maximize their impact.</p>
                         <p>With over 12 years of experience as a Lead Artist and Educator, I bridge the gap between traditional artistry and modern efficiency. I do not replace artists; I empower them with Hybrid Design Systems—workflows that let AI handle the repetitive "drafting" so your team can focus entirely on high-fidelity polish and creative strategy.</p>
 
                         <div className="mt-4">
-                            <h4 className={`text-xs uppercase tracking-widest font-bold ${theme.subText} mb-3`}>My Focus:</h4>
-                            <ul className="space-y-3 list-none pl-0">
-                                <li className="pl-3 border-l-2 border-white/20">
-                                    <span className="font-bold block mb-1">Empowering Artists</span>
-                                    <span className={`${theme.subText} text-xs`}>Training teams to use AI as a tool for control, not a replacement.</span>
+                            <h4 className={`text-sm uppercase tracking-widest font-bold ${theme.subText} mb-3`}>My Focus:</h4>
+                            <ul className="space-y-4 list-none pl-0">
+                                <li className="pl-4 border-l-2 border-white/20">
+                                    <span className="font-bold block mb-1 text-base">Empowering Artists</span>
+                                    <span className={`${theme.subText} text-sm`}>Training teams to use AI as a tool for control, not a replacement.</span>
                                 </li>
-                                <li className="pl-3 border-l-2 border-white/20">
-                                    <span className="font-bold block mb-1">Protecting Integrity</span>
-                                    <span className={`${theme.subText} text-xs`}>Using AI for the "base," while human taste handles the "finish."</span>
+                                <li className="pl-4 border-l-2 border-white/20">
+                                    <span className="font-bold block mb-1 text-base">Protecting Integrity</span>
+                                    <span className={`${theme.subText} text-sm`}>Using AI for the "base," while human taste handles the "finish."</span>
                                 </li>
-                                <li className="pl-3 border-l-2 border-white/20">
-                                    <span className="font-bold block mb-1">Scaling Output</span>
-                                    <span className={`${theme.subText} text-xs`}>Removing bottlenecks so teams can create more without burnout.</span>
+                                <li className="pl-4 border-l-2 border-white/20">
+                                    <span className="font-bold block mb-1 text-base">Scaling Output</span>
+                                    <span className={`${theme.subText} text-sm`}>Removing bottlenecks so teams can create more without burnout.</span>
                                 </li>
                             </ul>
                         </div>
@@ -603,8 +603,8 @@ export default function MobileLayout({
                 {/* Based in Malaysia */}
                 <div className={`fixed transition-alls duration-700 ${theme.text} text-[10px] uppercase tracking-widest
                     ${overlap.bottomLeft || overlap.bottomRight ? 'top-[30px] right-[24px] text-right items-end' : 'bottom-[20px] left-[24px] text-left items-start'}`}>
-                    <div className="opacity-50">Based in Malaysia</div>
-                    <div className="opacity-30">© 2026 (v13.29)</div>
+                    <div className={isLightMode ? 'opacity-70' : 'opacity-50'}>Based in Malaysia</div>
+                    <div className={isLightMode ? 'opacity-40' : 'opacity-30'}>© 2026 (v13.31)</div>
                 </div>
 
 
@@ -644,12 +644,12 @@ export default function MobileLayout({
                     <div className="relative inline-block w-[60px] h-[12px] align-middle">
                         {/* Scroll Label - Fades out to LEFT */}
                         <span className={`absolute top-0 ${overlap.bottomRight ? 'left-0' : 'right-0'} transition-all duration-500 ease-out whitespace-nowrap 
-                            ${isAtBottom ? '-translate-x-4 opacity-0' : 'translate-x-0 opacity-50'}`}>
+                            ${isAtBottom ? '-translate-x-4 opacity-0' : `translate-x-0 ${isLightMode ? 'opacity-70' : 'opacity-50'}`}`}>
                             Scroll ↓
                         </span>
                         {/* End Label - Fades in from RIGHT */}
                         <span className={`absolute top-0 ${overlap.bottomRight ? 'left-0' : 'right-0'} transition-all duration-500 ease-out whitespace-nowrap 
-                            ${isAtBottom ? 'translate-x-0 opacity-50' : 'translate-x-4 opacity-0'}`}>
+                            ${isAtBottom ? `translate-x-0 ${isLightMode ? 'opacity-70' : 'opacity-50'}` : 'translate-x-4 opacity-0'}`}>
                             End
                         </span>
                     </div>
