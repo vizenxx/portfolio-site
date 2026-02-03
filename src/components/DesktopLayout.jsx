@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { Sun, Moon, Plus, Pin as PinIcon } from 'lucide-react';
+import { Sun, Moon, Plus, Pin as PinIcon, Mail, Linkedin } from 'lucide-react';
 import gsap from 'gsap';
 import { HackerText } from './TextEffects';
 
@@ -24,7 +24,8 @@ export default function DesktopLayout({
     hoveredEl,
     setHoveredEl,
     isColorPinned,
-    setIsColorPinned
+    setIsColorPinned,
+    mutedColor
 }) {
     // --- LOCAL STATE ---
     const comp = useRef(null);
@@ -126,7 +127,7 @@ export default function DesktopLayout({
                                 <style>{`.custom-scroll::-webkit-scrollbar { width: 10px; } .custom-scroll::-webkit-scrollbar-track { background: transparent; border: 1px solid ${isLightMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)'}; border-radius: 999px; margin-block: 20vh; } .custom-scroll::-webkit-scrollbar-thumb { background: ${isLightMode ? 'black' : 'white'}; border-radius: 999px; border: 2px solid transparent; background-clip: content-box; } .custom-scroll::-webkit-scrollbar-thumb:hover { background: ${isLightMode ? '#333' : '#ddd'}; background-clip: content-box; }`}</style>
                                 <div className="flex w-full gap-12 px-2 h-full items-center">
                                     <div className="flex flex-col w-[30%] h-full gap-6 pt-5">
-                                        <div className={`flex-1 w-full rounded-2xl border ${theme.border} bg-white/5 backdrop-blur-sm overflow-hidden relative group`}><div className="absolute inset-0 flex items-center justify-center"><span className={`text-xs uppercase tracking-widest ${theme.subText}`}>Picture</span></div></div>
+                                        <div className={`flex-1 w-full rounded-2xl border ${isLightMode ? 'bg-white/80 border-black/10' : 'bg-black/20 border-white/10'} backdrop-blur-[6px] shadow-lg shadow-black/5 overflow-hidden relative group`}><div className="absolute inset-0 flex items-center justify-center"><span className={`text-xs uppercase tracking-widest ${theme.subText}`}>Picture</span></div></div>
                                         <div><h3 className={`text-xs uppercase tracking-[0.2em] mb-3 ${theme.subText} text-left`}>Expertise</h3><div className="flex flex-wrap gap-2 text-[0.7rem] justify-start">{['Creative Ops Strategy', 'Hybrid Workflow Design', 'AIGC Pipeline Arch.', 'Art Direction', 'Brand Systems', 'Tech-Art Leadership'].map((skill, i) => (<div key={i} className={`px-2 py-1.5 rounded border ${theme.border} uppercase tracking-wider text-left bg-transparent whitespace-nowrap`}>{skill}</div>))}</div></div>
                                     </div>
                                     <div ref={aboutContentRef} className={`flex-1 h-full overflow-y-auto pr-6 custom-scroll ${theme.text} text-left pt-5 flex flex-col justify-center`} style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%)' }}>
@@ -137,15 +138,15 @@ export default function DesktopLayout({
                                             <div className="mt-6">
                                                 <h4 className={`text-xs uppercase tracking-widest font-bold ${theme.subText} mb-4`}>My Focus:</h4>
                                                 <ul className="space-y-4 list-none pl-0">
-                                                    <li className="pl-4 border-l-2 border-white/20">
+                                                    <li className="pl-4 border-l-2" style={{ borderColor: mutedColor.replace('1)', '0.25)') }}>
                                                         <span className="font-bold block mb-1">Empowering Artists</span>
                                                         <span className={`${theme.subText} text-sm`}>Training teams to use AI as a tool for control, not a replacement.</span>
                                                     </li>
-                                                    <li className="pl-4 border-l-2 border-white/20">
+                                                    <li className="pl-4 border-l-2" style={{ borderColor: mutedColor.replace('1)', '0.25)') }}>
                                                         <span className="font-bold block mb-1">Protecting Integrity</span>
                                                         <span className={`${theme.subText} text-sm`}>Using AI for the "base," while human taste handles the "finish."</span>
                                                     </li>
-                                                    <li className="pl-4 border-l-2 border-white/20">
+                                                    <li className="pl-4 border-l-2" style={{ borderColor: mutedColor.replace('1)', '0.25)') }}>
                                                         <span className="font-bold block mb-1">Scaling Output</span>
                                                         <span className={`${theme.subText} text-sm`}>Removing bottlenecks so teams can create more without burnout.</span>
                                                     </li>
@@ -161,7 +162,7 @@ export default function DesktopLayout({
                     </div>
                 </div>
             </div>
-            <div className="flex-none w-full px-[4%] py-[2vh] pb-[6vh] pointer-events-auto"><div className="flex items-center justify-between w-full footer-elem"><div className={`${theme.subText} w-[25%] lg:w-[13%] min-w-[140px]`}><div className="flex flex-col leading-tight tracking-widest uppercase font-sans" style={{ fontSize: 'clamp(0.2rem, 0.7vw, 0.8rem)' }}><div className="whitespace-nowrap font-light">Based in Malaysia</div><div className="font-light">@ 2026</div></div></div><div className={`${theme.subText} text-[10px] uppercase tracking-widest opacity-60 animate-pulse`}>Scroll for more ↓</div><div className="flex items-center gap-8"><a href="#" className={`transition-colors duration-300 transform hover:scale-110`} onMouseEnter={() => setHoveredEl('linkedin')} onMouseLeave={() => setHoveredEl(null)} style={{ color: hoveredEl === 'linkedin' ? colorScheme.compString : (isLightMode ? '#000' : '#fff') }} aria-label="LinkedIn"><svg role="img" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452z" /></svg></a><a href="mailto:hello@vinztan.com" className={`transition-colors duration-300 transform hover:scale-110`} onMouseEnter={() => setHoveredEl('mail')} onMouseLeave={() => setHoveredEl(null)} style={{ color: hoveredEl === 'mail' ? colorScheme.compString : (isLightMode ? '#000' : '#fff') }} aria-label="Email"><svg role="img" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-.4 4.25l-7.07 4.42c-.32.2-.74.2-1.06 0L4.4 8.25c-.25-.16-.4-.43-.4-.72 0-.67.73-1.07 1.3-.72L12 11l6.7-4.19c.57-.35 1.3.05 1.3.72 0 .29-.15.56-.4.72z" /></svg></a></div></div></div>
+            <div className="flex-none w-full px-[4%] py-[2vh] pb-[6vh] pointer-events-auto"><div className="flex items-center justify-between w-full footer-elem"><div className={`${theme.subText} w-[25%] lg:w-[13%] min-w-[140px]`}><div className="flex flex-col leading-tight tracking-widest uppercase font-sans" style={{ fontSize: 'clamp(0.2rem, 0.7vw, 0.8rem)' }}><div className="whitespace-nowrap font-light">Based in Malaysia</div><div className="font-light">@ 2026</div></div></div><div className={`${theme.subText} text-[10px] uppercase tracking-widest opacity-60 animate-pulse`}>Scroll for more ↓</div><div className="flex items-center gap-8"><a href="#" className={`transition-colors duration-300 transform hover:scale-110`} onMouseEnter={() => setHoveredEl('linkedin')} onMouseLeave={() => setHoveredEl(null)} style={{ color: hoveredEl === 'linkedin' ? colorScheme.compString : (isLightMode ? '#000' : '#fff') }} aria-label="LinkedIn"><Linkedin size={20} /></a><a href="mailto:hello@vinztan.com" className={`transition-colors duration-300 transform hover:scale-110`} onMouseEnter={() => setHoveredEl('mail')} onMouseLeave={() => setHoveredEl(null)} style={{ color: hoveredEl === 'mail' ? colorScheme.compString : (isLightMode ? '#000' : '#fff') }} aria-label="Email"><Mail size={20} /></a></div></div></div>
         </div>
     );
 }

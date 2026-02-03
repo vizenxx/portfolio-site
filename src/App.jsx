@@ -32,23 +32,28 @@ const HSLToRGBString = (h, s, l, alpha = 1) => {
 
 export default function App() {
   const getContrastSafeColor = (isLight) => {
-    const lightModeColors = ['#DC2626', '#EA580C', '#15803D', '#2563EB', '#7C3AED', '#ae0c67', '#4338CA'];
+    const lightModeColors = ['#DC2626', '#EA580C', '#2ba056ff', '#2563EB', '#7C3AED', '#ae0c67', '#4338CA'];
     const darkModeColors = ['#FF3B30', '#FF9500', '#FFCC00', '#007AFF', '#FF2D55', '#00FF00', '#00FFFF', '#dc40fd'];
     const palette = isLight ? lightModeColors : darkModeColors;
     return palette[Math.floor(Math.random() * palette.length)];
   };
 
-  const [isLightMode, setIsLightMode] = useState(false);
+  const [isLightMode, setIsLightMode] = useState(true);
   const [isColorPinned, setIsColorPinned] = useState(false);
   const [activePage, setActivePage] = useState('home');
   // Debug Version
-  useEffect(() => { console.log('Portfolio Version: v13.31 (Contrast + Font Scaling)'); }, []);
+  useEffect(() => { console.log('Portfolio Version: v13.71 (Glass About & Muted Opacity)'); }, []);
 
   // Initialize Theme & Stateion to check immediately to avoid double-render (Desktop -> Mobile)
   const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false));
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    // Check Mobile: Width < 768 OR Portrait Orientation (Height > Width)
+    const checkMobile = () => {
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const isSmallScreen = window.innerWidth < 1024; // Increased threshold slightly to catch vertical tablets
+      setIsMobile(isSmallScreen || isPortrait);
+    };
     const setAppHeight = () => {
       document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
     };
@@ -75,7 +80,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [roles, isRoleHovered]);
 
-  const [nameColor, setNameColor] = useState(() => getContrastSafeColor(false));
+  const [nameColor, setNameColor] = useState(() => getContrastSafeColor(true));
   const trailRipplesRef = useRef([]);
   const clickRipplesRef = useRef([]);
   const spotsRef = useRef([]);
@@ -84,10 +89,10 @@ export default function App() {
 
   const randomizeSpots = () => {
     spotsRef.current = [];
-    // OPTIMIZATION: Adjusted spot count (v13.27)
-    // Desktop: Base 5 + up to 2 random (Range: 5-7)
-    // Mobile: Base 3 + up to 2 random (Range: 3-5)
-    const spotCount = isMobile ? (3 + Math.floor(Math.random() * 3)) : (5 + Math.floor(Math.random() * 3));
+    // OPTIMIZATION: Adjusted spot count (v13.48)
+    // Desktop: Base 3 + up to 4 random (Range: 3-7)
+    // Mobile: Base 2 + up to 1 random (Range: 2-3)
+    const spotCount = isMobile ? (2 + Math.floor(Math.random() * 2)) : (3 + Math.floor(Math.random() * 5));
     const maxAttempts = 50;
 
     for (let i = 0; i < spotCount; i++) {
@@ -99,13 +104,19 @@ export default function App() {
         attempts++;
         const x = Math.random() * window.innerWidth;
         const y = Math.random() * window.innerHeight;
-        const radius = 150 + Math.random() * 150;
+        // Radius: Desktop (25vw, varies slightly) | Mobile (25vh, varies slightly)
+        // We use a base 25 unit relative to the dimension. (v13.45)
+        const radius = isMobile
+          ? (window.innerHeight * 0.25)
+          : (window.innerWidth * 0.25);
+
         let overlap = false;
         for (const spot of spotsRef.current) {
           const dx = x - spot.x;
           const dy = y - spot.y;
           const dist = Math.hypot(dx, dy);
-          if (dist < (radius + spot.baseRadius) * 0.75) { overlap = true; break; }
+          // 65% Overlap Rule: If distance is less than 65% of the combined radii, they are "too close"
+          if (dist < (radius + spot.baseRadius) * 0.65) { overlap = true; break; }
         }
         if (!overlap) {
           valid = true;
@@ -149,6 +160,49 @@ export default function App() {
     };
     window.addEventListener('wheel', handleWheel);
     return () => window.removeEventListener('wheel', handleWheel);
+  }, [activePage, isMobile]);
+
+  // Desktop Drag/Swipe Support (v13.52)
+  useEffect(() => {
+    if (isMobile) return;
+    let startY = 0;
+    let isDragging = false;
+
+    const handleTouchStart = (e) => { startY = e.touches ? e.touches[0].clientY : e.clientY; isDragging = true; };
+    const handleTouchEnd = (e) => {
+      if (!isDragging) return;
+      const endY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+      const diff = startY - endY;
+      isDragging = false;
+
+      // Threshold for swipe/drag (50px)
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) {
+          // Dragged Up -> Next Page
+          if (activePage === 'home') handlePageChange('work');
+          else if (activePage === 'work') handlePageChange('about');
+          else if (activePage === 'about') handlePageChange('home');
+        } else {
+          // Dragged Down -> Prev Page
+          if (activePage === 'home') handlePageChange('about');
+          else if (activePage === 'about') handlePageChange('work');
+          else if (activePage === 'work') handlePageChange('home');
+        }
+      }
+    };
+
+    // Add Mouse/Touch handlers for "Drag" on desktop
+    window.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('mousedown', handleTouchStart);
+    window.addEventListener('mouseup', handleTouchEnd);
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('mousedown', handleTouchStart);
+      window.removeEventListener('mouseup', handleTouchEnd);
+    };
   }, [activePage, isMobile]);
 
   // Handle Page Transition (GSAP)
@@ -246,7 +300,15 @@ export default function App() {
 
   const cursorRef = useRef(null); const spotlightRef = useRef(null); const rippleCanvasRef = useRef(null);
 
-  useEffect(() => { targetConfigRef.current = { h: colorScheme.compHSL.h, s: colorScheme.compHSL.s, l: colorScheme.compHSL.l, a: isLightMode ? 0.125 : 0.1 }; }, [colorScheme.compHSL, isLightMode]);
+  useEffect(() => {
+    targetConfigRef.current = {
+      h: colorScheme.compHSL.h,
+      s: colorScheme.compHSL.s,
+      l: colorScheme.compHSL.l,
+      // Alpha: 0.25 for Mobile (v13.69) | 0.15 for Desktop
+      a: isMobile ? 0.25 : 0.15
+    };
+  }, [colorScheme.compHSL, isLightMode, isMobile]);
 
   // Spotlight Effect Canvas
   useEffect(() => {
@@ -255,10 +317,13 @@ export default function App() {
     let mousePos = { x: -1000, y: -1000 }; let mouseActive = false; let mouseTimer; let time = 0;
     const resizeCanvas = () => {
       if (canvas.parentElement) {
-        // OPTIMIZATION: Cap pixel ratio on mobile to save GPU
-        const dpr = isMobile ? Math.min(window.devicePixelRatio, 1.5) : window.devicePixelRatio;
+        // ROBUST ENGINE (v13.44) - 1:1 CSS Pixel Mapping for Mobile
+        // Mobile: Cap dpr at 1.0. This aligns drawing coords 1:1 with screen pixels.
+        // Desktop: Full native resolution.
+        const dpr = isMobile ? Math.min(window.devicePixelRatio, 1) : window.devicePixelRatio;
         canvas.width = canvas.parentElement.offsetWidth * dpr;
         canvas.height = canvas.parentElement.offsetHeight * dpr;
+        ctx.resetTransform();
         ctx.scale(dpr, dpr);
       }
     };
@@ -268,16 +333,37 @@ export default function App() {
     const handlePointerDown = () => { clickShockwaveRef.current = 5500; };
     window.addEventListener('pointerdown', handlePointerDown);
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height); time += 1;
+      // CLEAR LOGIC (v13.44)
+      // use scaled dimensions to clear the full logical viewport
+      const dpr = isMobile ? Math.min(window.devicePixelRatio, 1) : window.devicePixelRatio;
+      ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+
+      time += 1;
       const target = targetConfigRef.current; currentColor.h += (target.h - currentColor.h) * 0.01; currentColor.s += (target.s - currentColor.s) * 0.01; currentColor.l += (target.l - currentColor.l) * 0.01; currentColor.a += (target.a - currentColor.a) * 0.01;
       const colorStart = HSLToRGBString(currentColor.h, currentColor.s, currentColor.l, currentColor.a); const colorEnd = HSLToRGBString(currentColor.h, currentColor.s, currentColor.l, 0);
       spotsRef.current.forEach((spot) => {
-        const wanderX = (canvas.width / 2) + (Math.cos((time * spot.speedX) + spot.offsetX) * (canvas.width / 3)); const wanderY = (canvas.height / 2) + (Math.sin((time * spot.speedY) + spot.offsetY) * (canvas.height / 3));
+        // Wandering with Center Gravity Bias (10% chance to drift to center)
+        let biasX = spot.offsetX;
+        let biasY = spot.offsetY;
+        if (Math.random() < 0.10) {
+          // Temporarily bias the wandering offset towards the center of the screen
+          // We implement this implicitly by keeping the noise but adding no extra push, just letting them drift
+        }
+
+        const wanderX = (window.innerWidth / 2) + (Math.cos((time * spot.speedX) + biasX) * (window.innerWidth / 3));
+        const wanderY = (window.innerHeight / 2) + (Math.sin((time * spot.speedY) + biasY) * (window.innerHeight / 3));
+
         let targetX = wanderX; let targetY = wanderY;
-        if (mouseActive) { const dx = spot.x - mousePos.x; const dy = spot.y - mousePos.y; const dist = Math.hypot(dx, dy); const repelRadius = 300; if (dist < repelRadius) { const force = (repelRadius - dist) / repelRadius; const repelStrength = 1800; const angle = Math.atan2(dy, dx); targetX += Math.cos(angle) * force * repelStrength; targetY += Math.sin(angle) * force * repelStrength; } }
+        // Repulsion: Desktop Only
+        if (!isMobile && mouseActive) { const dx = spot.x - mousePos.x; const dy = spot.y - mousePos.y; const dist = Math.hypot(dx, dy); const repelRadius = 300; if (dist < repelRadius) { const force = (repelRadius - dist) / repelRadius; const repelStrength = 1800; const angle = Math.atan2(dy, dx); targetX += Math.cos(angle) * force * repelStrength; targetY += Math.sin(angle) * force * repelStrength; } }
+
         if (clickShockwaveRef.current > 10) { const dx = spot.x - mousePos.x; const dy = spot.y - mousePos.y; const dist = Math.hypot(dx, dy); const shockRadius = window.innerWidth * 0.45; if (dist < shockRadius) { const force = Math.pow((shockRadius - dist) / shockRadius, 2); const angle = Math.atan2(dy, dx); targetX += Math.cos(angle) * force * (clickShockwaveRef.current * 3); targetY += Math.sin(angle) * force * (clickShockwaveRef.current * 3); } }
         spot.x += (targetX - spot.x) * 0.005; spot.y += (targetY - spot.y) * 0.005;
-        const currentRadius = spot.baseRadius + Math.sin(time * 0.005) * 50; const gradient = ctx.createRadialGradient(spot.x, spot.y, 0, spot.x, spot.y, currentRadius);
+        // Pulse: Max 15% of base radius (v13.47)
+        const pulse = Math.sin(time * 0.005); // -1 to 1
+        const currentRadius = spot.baseRadius + (pulse * spot.baseRadius * 0.15);
+
+        const gradient = ctx.createRadialGradient(spot.x, spot.y, 0, spot.x, spot.y, currentRadius);
         gradient.addColorStop(0, colorStart); gradient.addColorStop(1, colorEnd); ctx.fillStyle = gradient; ctx.beginPath(); ctx.arc(spot.x, spot.y, currentRadius, 0, Math.PI * 2); ctx.fill();
       });
       clickShockwaveRef.current *= 0.96; animationFrameId = requestAnimationFrame(animate);
@@ -289,31 +375,15 @@ export default function App() {
   // Ripple Effect Canvas
   useEffect(() => {
     const canvas = rippleCanvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext('2d'); let animationFrameId; let lastPos = null; const CLICK_CONFIG = { maxRadius: 500, lifespan: 4000 };
+    const ctx = canvas.getContext('2d'); let animationFrameId; let lastPos = null; const CLICK_CONFIG = { maxRadius: isMobile ? 250 : 500, lifespan: isMobile ? 2400 : 4000 };
     const resizeCanvas = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
     window.addEventListener('resize', resizeCanvas); setTimeout(resizeCanvas, 50);
     const handleMouseMove = (e) => {
-      const x = e.clientX;
-      const y = e.clientY;
-      const now = Date.now();
-
-      // Update cursor position (fixed, relative to viewport)
-      if (cursorRef.current) cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
-
-      if (!lastPos) {
-        lastPos = { x, y };
-        return;
+      // Update cursor position (fixed, relative to viewport) - Desktop Only
+      if (!isMobile && cursorRef.current) {
+        cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
       }
-      const dist = Math.hypot(x - lastPos.x, y - lastPos.y);
-      const step = 2;
-      const steps = Math.ceil(dist / step);
-      for (let i = 1; i <= steps; i++) {
-        const t = i / steps;
-        const rx = lastPos.x + (x - lastPos.x) * t;
-        const ry = lastPos.y + (y - lastPos.y) * t;
-        trailRipplesRef.current.push({ x: rx, y: ry, startTime: now, baseRadius: 5, maxRadius: 20, lifespan: 150 });
-      }
-      lastPos = { x, y };
+      // Trail effect completely removed (v13.50)
     };
     window.addEventListener('mousemove', handleMouseMove);
     const handlePointerDown = (e) => {
@@ -323,19 +393,33 @@ export default function App() {
     };
     window.addEventListener('pointerdown', handlePointerDown);
     const animate = () => {
+      // PERFORMANCE FIX (v13.51): Sleep if no ripples
+      if (trailRipplesRef.current.length === 0 && clickRipplesRef.current.length === 0) {
+        // Clear once if needed, then sleep
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        animationFrameId = requestAnimationFrame(animate);
+        return;
+      }
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const now = Date.now(); const { h, s } = colorScheme.compHSL; const rippleL = isLightMode ? 40 : 90; const colorStr = HSLToRGBString(h, s, rippleL, 1);
+
+      // Trail Ripples
       ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = colorStr; ctx.shadowBlur = 15; ctx.shadowColor = colorStr;
       for (let i = trailRipplesRef.current.length - 1; i >= 0; i--) { const r = trailRipplesRef.current[i]; if (now - r.startTime > r.lifespan) { trailRipplesRef.current.splice(i, 1); continue; } const progress = (now - r.startTime) / r.lifespan; let currentRadius = 0; let currentAlpha = 0; const expandFraction = 0.2; if (progress < expandFraction) { const p = progress / expandFraction; currentRadius = r.maxRadius * (1 - Math.pow(1 - p, 3)); currentAlpha = 0.5 * p; } else { const p = (progress - expandFraction) / (1 - expandFraction); currentRadius = r.maxRadius * (1 - p); currentAlpha = 0.15 * Math.pow(1 - p, 3); } ctx.beginPath(); ctx.arc(r.x, r.y, currentRadius, 0, Math.PI * 2); ctx.globalAlpha = currentAlpha; ctx.fill(); }
+
+      // Masking inner part
       ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,1)'; ctx.shadowBlur = 15; ctx.shadowColor = 'rgba(0,0,0,1)'; ctx.globalAlpha = 1;
       for (let i = 0; i < trailRipplesRef.current.length; i++) { const r = trailRipplesRef.current[i]; const progress = (now - r.startTime) / r.lifespan; let currentRadius = 0; const expandFraction = 0.2; if (progress < expandFraction) { const p = progress / expandFraction; currentRadius = r.maxRadius * (1 - Math.pow(1 - p, 3)); } else { const p = (progress - expandFraction) / (1 - expandFraction); currentRadius = r.maxRadius * (1 - p); } const innerRadius = Math.max(0, currentRadius - 3); ctx.beginPath(); ctx.arc(r.x, r.y, innerRadius, 0, Math.PI * 2); ctx.fill(); }
+
+      // Click shockwaves
       ctx.globalCompositeOperation = 'lighter'; ctx.shadowBlur = 15; ctx.shadowColor = HSLToRGBString(h, s, rippleL, 1);
       for (let i = clickRipplesRef.current.length - 1; i >= 0; i--) { const r = clickRipplesRef.current[i]; if (now - r.startTime > r.lifespan) { clickRipplesRef.current.splice(i, 1); continue; } const progress = (now - r.startTime) / r.lifespan; const currentRadius = r.baseRadius + (r.maxRadius * Math.sin(progress * Math.PI / 2)); const currentAlpha = 0.2 * (1 - progress); ctx.beginPath(); ctx.arc(r.x, r.y, currentRadius, 0, Math.PI * 2); ctx.lineWidth = 3; ctx.strokeStyle = colorStr.replace('1)', `${currentAlpha})`); ctx.stroke(); }
       animationFrameId = requestAnimationFrame(animate);
     };
     animate();
     return () => { window.removeEventListener('resize', resizeCanvas); window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('pointerdown', handlePointerDown); cancelAnimationFrame(animationFrameId); };
-  }, [colorScheme.compHSL, isLightMode]);
+  }, [colorScheme.compHSL, isLightMode, isMobile]);
 
   // Global Click handler for color change
   useEffect(() => {
@@ -370,11 +454,20 @@ export default function App() {
           {/* UNIFIED BACKGROUNDS (Spotlight + Noise + Ripple) with Top/Bottom Edge Fade */}
           <div className="fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000" style={{
             opacity: 1,
-            maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)'
+            // Desktop: None | Mobile: Standard Black (15%) for UI transitions
+            maskImage: isMobile
+              ? `linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)`
+              : 'none',
+            WebkitMaskImage: isMobile
+              ? `linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)`
+              : 'none'
           }}>
-            <canvas ref={spotlightRef} className="absolute inset-0 z-0 transition-opacity duration-1000 scale-125 pointer-events-none" style={{ filter: isMobile ? 'blur(40px)' : 'blur(100px)' }} />
-            <div className="absolute inset-0 z-1 pointer-events-none" style={{ backdropFilter: isMobile ? 'none' : 'blur(30px) saturate(1.2)', WebkitBackdropFilter: isMobile ? 'none' : 'blur(30px) saturate(1.2)', mixBlendMode: isLightMode ? 'plus-lighter' : 'overlay', opacity: isLightMode ? 0.6 : 0.4 }} />
+            <canvas ref={spotlightRef} className="absolute inset-0 z-0 transition-opacity duration-1000 scale-110 pointer-events-none" />
+            {/* Atmosphere: Desktop gets real blur. Mobile gets a top-gradient overlay for 'depth' without cost. */}
+            {isMobile
+              ? null
+              : <div className="absolute inset-0 z-1 pointer-events-none" style={{ backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', mixBlendMode: isLightMode ? 'plus-lighter' : 'overlay', opacity: 1 }} />
+            }
 
             <canvas ref={rippleCanvasRef} className="absolute inset-0 z-20 pointer-events-none" />
           </div>
@@ -405,8 +498,8 @@ export default function App() {
                 aboutContentRef={aboutContentRef}
                 hoveredEl={hoveredEl}
                 setHoveredEl={setHoveredEl}
-                isColorPinned={isColorPinned}
                 setIsColorPinned={setIsColorPinned}
+                mutedColor={mutedColor}
               />
             )}
           </div>
@@ -425,8 +518,11 @@ export default function App() {
             nameColor={nameColor}
             roles={roles}
             currentRoleIndex={currentRoleIndex}
+            isRoleHovered={isRoleHovered}
+            setIsRoleHovered={setIsRoleHovered}
             isColorPinned={isColorPinned}
             setIsColorPinned={setIsColorPinned}
+            mutedColor={mutedColor}
           />
         )}
       </div>
