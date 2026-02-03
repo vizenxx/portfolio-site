@@ -615,7 +615,7 @@ export default function MobileLayout({
                 <div className={`fixed transition-alls duration-700 ${theme.text} text-[10px] uppercase tracking-widest
                     ${overlap.bottomLeft || overlap.bottomRight ? 'top-[30px] right-[24px] text-right items-end' : 'bottom-[20px] left-[24px] text-left items-start'}`}>
                     <div className="opacity-50">Based in Malaysia</div>
-                    <div className="opacity-30">© 2026 (v13.23)</div>
+                    <div className="opacity-30">© 2026 (v13.27)</div>
                 </div>
 
 

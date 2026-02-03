@@ -42,7 +42,7 @@ export default function App() {
   const [isColorPinned, setIsColorPinned] = useState(false);
   const [activePage, setActivePage] = useState('home');
   // Debug Version
-  useEffect(() => { console.log('Portfolio Version: v12.75 (Dynamic UI + Menu)'); }, []);
+  useEffect(() => { console.log('Portfolio Version: v13.27 (Adjusted Spot Count)'); }, []);
 
   // Initialize Theme & Stateion to check immediately to avoid double-render (Desktop -> Mobile)
   const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false));
@@ -84,10 +84,10 @@ export default function App() {
 
   const randomizeSpots = () => {
     spotsRef.current = [];
-    // OPTIMIZATION: Reduce spot count for mobile (2-3) vs Desktop (3-7)
-    // 3-7 spots logic: floor(random * 5) + 3
-    // 2-3 spots logic: floor(random * 2) + 2
-    const spotCount = isMobile ? (Math.floor(Math.random() * 2) + 2) : (Math.floor(Math.random() * 5) + 3);
+    // OPTIMIZATION: Adjusted spot count (v13.27)
+    // Desktop: Base 5 + up to 2 random (Range: 5-7)
+    // Mobile: Base 3 + up to 2 random (Range: 3-5)
+    const spotCount = isMobile ? (3 + Math.floor(Math.random() * 3)) : (5 + Math.floor(Math.random() * 3));
     const maxAttempts = 50;
 
     for (let i = 0; i < spotCount; i++) {
@@ -269,15 +269,15 @@ export default function App() {
     window.addEventListener('pointerdown', handlePointerDown);
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height); time += 1;
-      const target = targetConfigRef.current; currentColor.h += (target.h - currentColor.h) * 0.05; currentColor.s += (target.s - currentColor.s) * 0.05; currentColor.l += (target.l - currentColor.l) * 0.05; currentColor.a += (target.a - currentColor.a) * 0.05;
+      const target = targetConfigRef.current; currentColor.h += (target.h - currentColor.h) * 0.01; currentColor.s += (target.s - currentColor.s) * 0.01; currentColor.l += (target.l - currentColor.l) * 0.01; currentColor.a += (target.a - currentColor.a) * 0.01;
       const colorStart = HSLToRGBString(currentColor.h, currentColor.s, currentColor.l, currentColor.a); const colorEnd = HSLToRGBString(currentColor.h, currentColor.s, currentColor.l, 0);
       spotsRef.current.forEach((spot) => {
         const wanderX = (canvas.width / 2) + (Math.cos((time * spot.speedX) + spot.offsetX) * (canvas.width / 3)); const wanderY = (canvas.height / 2) + (Math.sin((time * spot.speedY) + spot.offsetY) * (canvas.height / 3));
         let targetX = wanderX; let targetY = wanderY;
         if (mouseActive) { const dx = spot.x - mousePos.x; const dy = spot.y - mousePos.y; const dist = Math.hypot(dx, dy); const repelRadius = 300; if (dist < repelRadius) { const force = (repelRadius - dist) / repelRadius; const repelStrength = 1800; const angle = Math.atan2(dy, dx); targetX += Math.cos(angle) * force * repelStrength; targetY += Math.sin(angle) * force * repelStrength; } }
         if (clickShockwaveRef.current > 10) { const dx = spot.x - mousePos.x; const dy = spot.y - mousePos.y; const dist = Math.hypot(dx, dy); const shockRadius = window.innerWidth * 0.45; if (dist < shockRadius) { const force = Math.pow((shockRadius - dist) / shockRadius, 2); const angle = Math.atan2(dy, dx); targetX += Math.cos(angle) * force * (clickShockwaveRef.current * 3); targetY += Math.sin(angle) * force * (clickShockwaveRef.current * 3); } }
-        spot.x += (targetX - spot.x) * 0.02; spot.y += (targetY - spot.y) * 0.02;
-        const currentRadius = spot.baseRadius + Math.sin(time * 0.02) * 50; const gradient = ctx.createRadialGradient(spot.x, spot.y, 0, spot.x, spot.y, currentRadius);
+        spot.x += (targetX - spot.x) * 0.005; spot.y += (targetY - spot.y) * 0.005;
+        const currentRadius = spot.baseRadius + Math.sin(time * 0.005) * 50; const gradient = ctx.createRadialGradient(spot.x, spot.y, 0, spot.x, spot.y, currentRadius);
         gradient.addColorStop(0, colorStart); gradient.addColorStop(1, colorEnd); ctx.fillStyle = gradient; ctx.beginPath(); ctx.arc(spot.x, spot.y, currentRadius, 0, Math.PI * 2); ctx.fill();
       });
       clickShockwaveRef.current *= 0.96; animationFrameId = requestAnimationFrame(animate);
