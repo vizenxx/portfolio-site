@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sun, Moon, Pin as PinIcon, Menu, X, GripVertical, Plus, Mail, Linkedin } from 'lucide-react';
+import { Sun, Moon, Pin as PinIcon, Menu, X, GripVertical, Plus } from 'lucide-react';
 
 import { HackerText } from './TextEffects';
 
@@ -348,7 +348,7 @@ export default function MobileLayout({
                 {/* ABOUT */}
                 <section ref={aboutRef} id="about" className="w-full flex flex-col justify-center px-6 py-20 gap-8 relative overflow-hidden">
 
-                    <div className={`w-full aspect-square max-w-sm mx-auto rounded-2xl border ${menuBg} ${menuBorder} backdrop-blur-[3px] shadow-lg shadow-black/5 flex items-center justify-center`}>
+                    <div className={`w-full aspect-square max-w-sm mx-auto rounded-2xl border ${isLightMode ? 'bg-white/10 border-black/10' : 'bg-black/5 border-white/10'} backdrop-blur-md shadow-lg shadow-black/5 flex items-center justify-center`}>
                         <span className={`text-sm uppercase tracking-widest ${theme.subText}`}>Picture</span>
                     </div>
                     <div className="flex flex-wrap gap-2 justify-center">
@@ -356,7 +356,7 @@ export default function MobileLayout({
                             <div key={i} className={`px-3 py-2 rounded border ${theme.border} text-center uppercase tracking-wider text-[10px]`}>{skill}</div>
                         ))}
                     </div>
-                    <div className={`${theme.text} p-6 rounded-2xl border ${menuBg} ${menuBorder} backdrop-blur-[3px] shadow-lg shadow-black/5 text-sm leading-relaxed text-justify space-y-4`}>
+                    <div className={`${theme.text} p-6 rounded-2xl border ${isLightMode ? 'bg-white/10 border-black/10' : 'bg-black/5 border-white/10'} backdrop-blur-md shadow-lg shadow-black/5 text-sm leading-relaxed text-justify space-y-4`}>
                         <p>Hi, I'm Vinz, I help Creative Teams escape production limits and maximize their impact.</p>
                         <p>With over 12 years of experience as a Lead Artist and Educator, I bridge the gap between traditional artistry and modern efficiency. I do not replace artists; I empower them with Hybrid Design Systems—workflows that let AI handle the repetitive "drafting" so your team can focus entirely on high-fidelity polish and creative strategy.</p>
 
@@ -409,7 +409,7 @@ export default function MobileLayout({
 
             {/* ATMOSPHERE - Refined Gradient Blur Stack (v13.19) */}
             {/* Layer 1: Base Blur (5px) */}
-            <div className="fixed top-0 left-0 right-0 z-30 pointer-events-none h-[15vh]"
+            <div className="fixed top-0 left-0 right-0 z-30 pointer-events-none h-[22.5vh]"
                 style={{
                     backdropFilter: 'blur(5px)',
                     WebkitBackdropFilter: 'blur(5px)',
@@ -424,7 +424,7 @@ export default function MobileLayout({
                 }}
             />
             {/* Layer 2: Boost Blur (+5px at Top = 10px Total) */}
-            <div className="fixed top-0 left-0 right-0 z-30 pointer-events-none h-[15vh]"
+            <div className="fixed top-0 left-0 right-0 z-30 pointer-events-none h-[22.5vh]"
                 style={{
                     backdropFilter: 'blur(5px)',
                     WebkitBackdropFilter: 'blur(5px)',
@@ -452,41 +452,33 @@ export default function MobileLayout({
 
 
                 {/* Vinz Tan */}
-                <button onClick={() => scrollTo(aboutRef)} className={`flex items-center group h-5 transition-all ${overlap.topLeft ? 'flex-row-reverse' : ''}`}>
-                    <span className="transition-all ease-out" style={{
-                        width: (activePage === 'about' && !isAtBottom) ? '6px' : '0px',
-                        height: (activePage === 'about' && !isAtBottom) ? '1em' : '0px',
+                <button onClick={() => handlePageChange('about')} className={`flex items-center group h-5 transition-all ${overlap.topLeft ? 'flex-row-reverse' : ''}`}>
+                    <span className={`transition-all duration-300 ${overlap.topLeft ? 'ml-3' : 'mr-3'}`} style={{
+                        width: activePage === 'about' ? '4px' : '0px',
+                        height: '100%',
                         backgroundColor: colorScheme.compString,
-                        [overlap.topLeft ? 'marginLeft' : 'marginRight']: (activePage === 'about' && !isAtBottom) ? '12px' : '0px',
-                        opacity: (activePage === 'about' && !isAtBottom) ? 1 : 0,
-                        transitionProperty: 'width, height, margin, opacity',
-                        transitionDuration: '300ms',
-                        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                        opacity: activePage === 'about' ? 1 : 0
                     }} />
-                    <span className={`font-black tracking-[0.2em] uppercase transition-all duration-300 ${(activePage === 'about' && !isAtBottom) ? 'opacity-100' : 'opacity-100'}`}
-                        style={{
-                            color: (!isAtBottom) ? nameColor : 'inherit',
-                            fontSize: '1.25rem' // text-xl equivalent to match visual weight
-                        }}>
+                    <span className={`text-lg font-black tracking-[0.2em] uppercase transition-all duration-300 ${activePage === 'work' ? 'opacity-80' : 'opacity-100'}`}
+                        style={{ color: activePage === 'work' ? 'inherit' : nameColor }}>
                         Vinz Tan
                     </span>
+
                 </button>
 
 
                 {/* Projects */}
-                <button onClick={() => scrollTo(workRef)} className={`flex items-center group h-5 transition-all ${overlap.topLeft ? 'flex-row-reverse' : ''}`}>
-                    <span className="transition-all ease-out" style={{
-                        width: (activePage === 'work' || isAtBottom) ? '6px' : '0px',
-                        height: (activePage === 'work' || isAtBottom) ? '1em' : '0px',
+                <button onClick={() => handlePageChange('work')} className={`flex items-center group h-5 transition-all ${overlap.topLeft ? 'flex-row-reverse' : ''}`}>
+                    <span className={`transition-all duration-300 ${overlap.topLeft ? 'ml-3' : 'mr-3'}`} style={{
+                        width: activePage === 'work' ? '4px' : '0px',
+                        height: '100%',
                         backgroundColor: colorScheme.compString,
-                        [overlap.topLeft ? 'marginLeft' : 'marginRight']: (activePage === 'work' || isAtBottom) ? '12px' : '0px',
-                        opacity: (activePage === 'work' || isAtBottom) ? 1 : 0,
-                        transitionProperty: 'width, height, margin, opacity',
-                        transitionDuration: '300ms',
-                        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                        opacity: activePage === 'work' ? 1 : 0
                     }} />
-                    <span className={`text-lg font-black tracking-[0.2em] uppercase transition-all duration-300 ${(activePage === 'work' || isAtBottom) ? 'opacity-100' : 'opacity-60'}`}
-                        style={{ color: (activePage === 'work' || isAtBottom) ? nameColor : 'inherit' }}>
+                    <span className={`text-base font-bold tracking-[0.2em] uppercase transition-all duration-300 ${activePage === 'work' ? 'opacity-100' : 'opacity-60'}`}
+                        style={{
+                            color: activePage === 'work' ? colorScheme.base : 'inherit'
+                        }}>
                         Projects
                     </span>
                 </button>
@@ -556,8 +548,7 @@ export default function MobileLayout({
                             </div>
                             <div className={`flex items-center transition-all duration-500 overflow-hidden ${isDragging ? 'w-0 opacity-0' : 'w-fit opacity-100'}`}>
                                 <div className="w-[6px]" /> {/* spacing 1.25 (approx) */}
-                                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={`p-1.5 rounded-full transition-all active:scale-90 ${isLightMode ? 'hover:bg-black/5 text-black' : 'hover:bg-white/10 text-white'}`}
-                                    style={{ color: isMenuOpen ? nameColor : undefined }}>
+                                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={`p-1.5 rounded-full transition-all active:scale-90 ${isLightMode ? 'hover:bg-black/5 text-black' : 'hover:bg-white/10 text-white'}`}>
                                     {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
                                 </button>
                                 <div className="w-[5px]" /> {/* spacing 1.0 */}
@@ -584,8 +575,7 @@ export default function MobileLayout({
                                     {isLightMode ? <Moon size={20} /> : <Sun size={20} />}
                                 </button>
                                 <div className="w-[5px]" /> {/* spacing 1.0 */}
-                                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={`p-1.5 rounded-full transition-all active:scale-90 ${isLightMode ? 'hover:bg-black/5 text-black' : 'hover:bg-white/10 text-white'}`}
-                                    style={{ color: isMenuOpen ? nameColor : undefined }}>
+                                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={`p-1.5 rounded-full transition-all active:scale-90 ${isLightMode ? 'hover:bg-black/5 text-black' : 'hover:bg-white/10 text-white'}`}>
                                     {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
                                 </button>
                                 <div className="w-[6px]" /> {/* spacing 1.25 (approx) */}
@@ -622,7 +612,7 @@ export default function MobileLayout({
                 <div className={`fixed transition-alls duration-700 ${theme.text} text-[10px] uppercase tracking-widest
                     ${overlap.bottomLeft || overlap.bottomRight ? 'top-[30px] right-[24px] text-right items-end' : 'bottom-[20px] left-[24px] text-left items-start'}`}>
                     <div className={isLightMode ? 'opacity-70' : 'opacity-50'}>Based in Malaysia</div>
-                    <div className={isLightMode ? 'opacity-40' : 'opacity-30'}>© 2026 (v13.72)</div>
+                    <div className={isLightMode ? 'opacity-40' : 'opacity-30'}>© 2026 (v13.79)</div>
                 </div>
 
 
@@ -656,23 +646,20 @@ export default function MobileLayout({
 
 
                 {/* Scroll Indicator */}
-                <div className={`fixed transition-all duration-700 ${theme.text} animate-pulse
-                    ${overlap.bottomRight ? 'bottom-[20px] left-[24px] text-left' : 'bottom-[20px] right-[24px] text-right'}`}
-                    style={{ pointerEvents: 'auto' }}>
+                <div className={`fixed transition-all duration-700 ${theme.text} text-[10px] uppercase tracking-widest animate-pulse
+                    ${overlap.bottomRight ? 'bottom-[20px] left-[24px] text-left' : 'bottom-[20px] right-[24px] text-right'}`}>
 
                     <div className="relative inline-block w-[60px] h-[12px] align-middle">
                         {/* Scroll Label - Fades out to LEFT */}
-                        <span className={`absolute top-0 right-0 transition-all duration-500 ease-out whitespace-nowrap text-[10px] uppercase tracking-widest
-                            ${isAtBottom ? '-translate-x-4 opacity-0 pointer-events-none' : `translate-x-0 ${isLightMode ? 'opacity-70' : 'opacity-50'}`}`}>
+                        <span className={`absolute top-0 ${overlap.bottomRight ? 'left-0' : 'right-0'} transition-all duration-500 ease-out whitespace-nowrap 
+                            ${isAtBottom ? '-translate-x-4 opacity-0' : `translate-x-0 ${isLightMode ? 'opacity-70' : 'opacity-50'}`}`}>
                             Scroll ↓
                         </span>
-                        {/* End Icons - Fades in from RIGHT (Mail & LinkedIn) */}
-                        <div className={`absolute top-[-12px] right-0 flex items-center gap-5 transition-all duration-500 ease-out 
-                            ${isAtBottom ? `translate-x-0 ${isLightMode ? 'opacity-100' : 'opacity-75'}` : 'translate-x-4 opacity-0 pointer-events-none'}`}>
-
-                            <a href="https://linkedin.com/in/vinztan" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform"><Linkedin size={24} /></a>
-                            <a href="mailto:tanvinz@gmail.com" className="hover:scale-110 transition-transform"><Mail size={24} /></a>
-                        </div>
+                        {/* End Label - Fades in from RIGHT */}
+                        <span className={`absolute top-0 ${overlap.bottomRight ? 'left-0' : 'right-0'} transition-all duration-500 ease-out whitespace-nowrap 
+                            ${isAtBottom ? `translate-x-0 ${isLightMode ? 'opacity-100' : 'opacity-75'}` : 'translate-x-4 opacity-0'}`}>
+                            End.
+                        </span>
                     </div>
                 </div>
 
@@ -681,25 +668,23 @@ export default function MobileLayout({
             </div>
 
             {/* Menu Overlay */}
-            {
-                isMenuOpen && (
-                    <div className={`fixed inset-0 z-[45] ${overlayBg} backdrop-blur-xl transition-all duration-500 flex flex-col items-center justify-center gap-8`}>
-                        {[
-                            { name: 'Home', ref: homeRef },
-                            { name: 'Vinz Tan', ref: aboutRef },
-                            { name: 'Projects', ref: workRef }
-                        ].map((item) => (
-                            <button key={item.name} onClick={() => scrollTo(item.ref)} className={`text-4xl font-bold uppercase tracking-widest ${overlayText} hover:opacity-70`} style={item.name === 'Vinz Tan' ? { color: nameColor } : {}}>
-                                {item.name}
-                            </button>
-                        ))}
-                        <div className={`mt-8 flex gap-8 ${isLightMode ? 'text-black/60' : 'text-white/60'}`}>
-                            <a href="https://linkedin.com/in/vinztan" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform"><Linkedin size={28} /></a>
-                            <a href="mailto:tanvinz@gmail.com" className="hover:scale-110 transition-transform"><Mail size={28} /></a>
-                        </div>
+            {isMenuOpen && (
+                <div className={`fixed inset-0 z-[45] ${overlayBg} backdrop-blur-xl transition-all duration-500 flex flex-col items-center justify-center gap-8`}>
+                    {[
+                        { name: 'Home', ref: homeRef },
+                        { name: 'Vinz Tan', ref: aboutRef },
+                        { name: 'Projects', ref: workRef }
+                    ].map((item) => (
+                        <button key={item.name} onClick={() => scrollTo(item.ref)} className={`text-4xl font-bold uppercase tracking-widest ${overlayText} hover:opacity-70`} style={item.name === 'Vinz Tan' ? { color: nameColor } : {}}>
+                            {item.name}
+                        </button>
+                    ))}
+                    <div className={`mt-8 flex gap-8 text-sm ${isLightMode ? 'text-black/60' : 'text-white/60'}`}>
+                        <a href="#">LinkedIn</a>
+                        <a href="mailto:hello@vinztan.com">Email</a>
                     </div>
-                )
-            }
-        </div >
+                </div>
+            )}
+        </div>
     );
 }

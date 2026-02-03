@@ -12,7 +12,7 @@ import MobileLayout from './components/MobileLayout';
 const hexToHSL = (H) => {
   let r = 0, g = 0, b = 0;
   if (H.length === 4) { r = "0x" + H[1] + H[1]; g = "0x" + H[2] + H[2]; b = "0x" + H[3] + H[3]; }
-  else if (H.length === 7) { r = "0x" + H[1] + H[2]; g = "0x" + H[3] + H[4]; b = "0x" + H[5] + H[6]; }
+  else if (H.length === 7 || H.length === 9) { r = "0x" + H[1] + H[2]; g = "0x" + H[3] + H[4]; b = "0x" + H[5] + H[6]; }
   r /= 255; g /= 255; b /= 255;
   let cmin = Math.min(r, g, b), cmax = Math.max(r, g, b), delta = cmax - cmin, h = 0, s = 0, l = 0;
   if (delta === 0) h = 0; else if (cmax === r) h = ((g - b) / delta) % 6; else if (cmax === g) h = (b - r) / delta + 2; else h = (r - g) / delta + 4;
@@ -32,7 +32,7 @@ const HSLToRGBString = (h, s, l, alpha = 1) => {
 
 export default function App() {
   const getContrastSafeColor = (isLight) => {
-    const lightModeColors = ['#DC2626', '#EA580C', '#2ba056ff', '#2563EB', '#7C3AED', '#ae0c67', '#4338CA'];
+    const lightModeColors = ['#DC2626', '#EA580C', '#0b9b19ff', '#2563EB', '#7C3AED', '#ae0c67', '#4338CA'];
     const darkModeColors = ['#FF3B30', '#FF9500', '#FFCC00', '#007AFF', '#FF2D55', '#00FF00', '#00FFFF', '#dc40fd'];
     const palette = isLight ? lightModeColors : darkModeColors;
     return palette[Math.floor(Math.random() * palette.length)];
@@ -42,17 +42,19 @@ export default function App() {
   const [isColorPinned, setIsColorPinned] = useState(false);
   const [activePage, setActivePage] = useState('home');
   // Debug Version
-  useEffect(() => { console.log('Portfolio Version: v13.71 (Glass About & Muted Opacity)'); }, []);
+  useEffect(() => { console.log('Portfolio Version: v13.79 (Ghost Blur Refinement)'); }, []);
 
   // Initialize Theme & Stateion to check immediately to avoid double-render (Desktop -> Mobile)
-  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false));
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    // Mobile view if width < 768 OR if screen is in Portrait orientation
+    return window.innerWidth < 768 || window.innerHeight > window.innerWidth;
+  });
 
   useEffect(() => {
-    // Check Mobile: Width < 768 OR Portrait Orientation (Height > Width)
     const checkMobile = () => {
-      const isPortrait = window.innerHeight > window.innerWidth;
-      const isSmallScreen = window.innerWidth < 1024; // Increased threshold slightly to catch vertical tablets
-      setIsMobile(isSmallScreen || isPortrait);
+      // Logic: Mobile view for narrow screens OR any portrait orientation
+      setIsMobile(window.innerWidth < 768 || window.innerHeight > window.innerWidth);
     };
     const setAppHeight = () => {
       document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
@@ -162,49 +164,6 @@ export default function App() {
     return () => window.removeEventListener('wheel', handleWheel);
   }, [activePage, isMobile]);
 
-  // Desktop Drag/Swipe Support (v13.52)
-  useEffect(() => {
-    if (isMobile) return;
-    let startY = 0;
-    let isDragging = false;
-
-    const handleTouchStart = (e) => { startY = e.touches ? e.touches[0].clientY : e.clientY; isDragging = true; };
-    const handleTouchEnd = (e) => {
-      if (!isDragging) return;
-      const endY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-      const diff = startY - endY;
-      isDragging = false;
-
-      // Threshold for swipe/drag (50px)
-      if (Math.abs(diff) > 50) {
-        if (diff > 0) {
-          // Dragged Up -> Next Page
-          if (activePage === 'home') handlePageChange('work');
-          else if (activePage === 'work') handlePageChange('about');
-          else if (activePage === 'about') handlePageChange('home');
-        } else {
-          // Dragged Down -> Prev Page
-          if (activePage === 'home') handlePageChange('about');
-          else if (activePage === 'about') handlePageChange('work');
-          else if (activePage === 'work') handlePageChange('home');
-        }
-      }
-    };
-
-    // Add Mouse/Touch handlers for "Drag" on desktop
-    window.addEventListener('touchstart', handleTouchStart);
-    window.addEventListener('touchend', handleTouchEnd);
-    window.addEventListener('mousedown', handleTouchStart);
-    window.addEventListener('mouseup', handleTouchEnd);
-
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchend', handleTouchEnd);
-      window.removeEventListener('mousedown', handleTouchStart);
-      window.removeEventListener('mouseup', handleTouchEnd);
-    };
-  }, [activePage, isMobile]);
-
   // Handle Page Transition (GSAP)
   const handlePageChange = (newPage) => {
     if (newPage === activePage || isTransitioning.current) return;
@@ -305,7 +264,7 @@ export default function App() {
       h: colorScheme.compHSL.h,
       s: colorScheme.compHSL.s,
       l: colorScheme.compHSL.l,
-      // Alpha: 0.25 for Mobile (v13.69) | 0.15 for Desktop
+      // Alpha: 0.25 for Mobile | 0.15 for Desktop
       a: isMobile ? 0.25 : 0.15
     };
   }, [colorScheme.compHSL, isLightMode, isMobile]);
@@ -375,15 +334,33 @@ export default function App() {
   // Ripple Effect Canvas
   useEffect(() => {
     const canvas = rippleCanvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext('2d'); let animationFrameId; let lastPos = null; const CLICK_CONFIG = { maxRadius: isMobile ? 250 : 500, lifespan: isMobile ? 2400 : 4000 };
+    const ctx = canvas.getContext('2d'); let animationFrameId; let lastPos = null;
+    const CLICK_CONFIG = { maxRadius: isMobile ? 250 : 500, lifespan: isMobile ? 2400 : 4000 };
     const resizeCanvas = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
     window.addEventListener('resize', resizeCanvas); setTimeout(resizeCanvas, 50);
     const handleMouseMove = (e) => {
-      // Update cursor position (fixed, relative to viewport) - Desktop Only
-      if (!isMobile && cursorRef.current) {
-        cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      const x = e.clientX;
+      const y = e.clientY;
+      const now = Date.now();
+
+      // Update cursor position (fixed, relative to viewport)
+      if (cursorRef.current) cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+
+      if (!lastPos) {
+        lastPos = { x, y };
+        return;
       }
-      // Trail effect completely removed (v13.50)
+      const dist = Math.hypot(x - lastPos.x, y - lastPos.y);
+      const step = 2;
+      const steps = Math.ceil(dist / step);
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const rx = lastPos.x + (x - lastPos.x) * t;
+        const ry = lastPos.y + (y - lastPos.y) * t;
+        // Trail Radius reduced to 60% (v13.48) -> 5 base + 12 max (was 20)
+        trailRipplesRef.current.push({ x: rx, y: ry, startTime: now, baseRadius: 5, maxRadius: 12, lifespan: 150 });
+      }
+      lastPos = { x, y };
     };
     window.addEventListener('mousemove', handleMouseMove);
     const handlePointerDown = (e) => {
@@ -393,33 +370,19 @@ export default function App() {
     };
     window.addEventListener('pointerdown', handlePointerDown);
     const animate = () => {
-      // PERFORMANCE FIX (v13.51): Sleep if no ripples
-      if (trailRipplesRef.current.length === 0 && clickRipplesRef.current.length === 0) {
-        // Clear once if needed, then sleep
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        animationFrameId = requestAnimationFrame(animate);
-        return;
-      }
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const now = Date.now(); const { h, s } = colorScheme.compHSL; const rippleL = isLightMode ? 40 : 90; const colorStr = HSLToRGBString(h, s, rippleL, 1);
-
-      // Trail Ripples
       ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = colorStr; ctx.shadowBlur = 15; ctx.shadowColor = colorStr;
       for (let i = trailRipplesRef.current.length - 1; i >= 0; i--) { const r = trailRipplesRef.current[i]; if (now - r.startTime > r.lifespan) { trailRipplesRef.current.splice(i, 1); continue; } const progress = (now - r.startTime) / r.lifespan; let currentRadius = 0; let currentAlpha = 0; const expandFraction = 0.2; if (progress < expandFraction) { const p = progress / expandFraction; currentRadius = r.maxRadius * (1 - Math.pow(1 - p, 3)); currentAlpha = 0.5 * p; } else { const p = (progress - expandFraction) / (1 - expandFraction); currentRadius = r.maxRadius * (1 - p); currentAlpha = 0.15 * Math.pow(1 - p, 3); } ctx.beginPath(); ctx.arc(r.x, r.y, currentRadius, 0, Math.PI * 2); ctx.globalAlpha = currentAlpha; ctx.fill(); }
-
-      // Masking inner part
       ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,1)'; ctx.shadowBlur = 15; ctx.shadowColor = 'rgba(0,0,0,1)'; ctx.globalAlpha = 1;
       for (let i = 0; i < trailRipplesRef.current.length; i++) { const r = trailRipplesRef.current[i]; const progress = (now - r.startTime) / r.lifespan; let currentRadius = 0; const expandFraction = 0.2; if (progress < expandFraction) { const p = progress / expandFraction; currentRadius = r.maxRadius * (1 - Math.pow(1 - p, 3)); } else { const p = (progress - expandFraction) / (1 - expandFraction); currentRadius = r.maxRadius * (1 - p); } const innerRadius = Math.max(0, currentRadius - 3); ctx.beginPath(); ctx.arc(r.x, r.y, innerRadius, 0, Math.PI * 2); ctx.fill(); }
-
-      // Click shockwaves
       ctx.globalCompositeOperation = 'lighter'; ctx.shadowBlur = 15; ctx.shadowColor = HSLToRGBString(h, s, rippleL, 1);
       for (let i = clickRipplesRef.current.length - 1; i >= 0; i--) { const r = clickRipplesRef.current[i]; if (now - r.startTime > r.lifespan) { clickRipplesRef.current.splice(i, 1); continue; } const progress = (now - r.startTime) / r.lifespan; const currentRadius = r.baseRadius + (r.maxRadius * Math.sin(progress * Math.PI / 2)); const currentAlpha = 0.2 * (1 - progress); ctx.beginPath(); ctx.arc(r.x, r.y, currentRadius, 0, Math.PI * 2); ctx.lineWidth = 3; ctx.strokeStyle = colorStr.replace('1)', `${currentAlpha})`); ctx.stroke(); }
       animationFrameId = requestAnimationFrame(animate);
     };
     animate();
     return () => { window.removeEventListener('resize', resizeCanvas); window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('pointerdown', handlePointerDown); cancelAnimationFrame(animationFrameId); };
-  }, [colorScheme.compHSL, isLightMode, isMobile]);
+  }, [colorScheme.compHSL, isLightMode]);
 
   // Global Click handler for color change
   useEffect(() => {
@@ -465,7 +428,7 @@ export default function App() {
             <canvas ref={spotlightRef} className="absolute inset-0 z-0 transition-opacity duration-1000 scale-110 pointer-events-none" />
             {/* Atmosphere: Desktop gets real blur. Mobile gets a top-gradient overlay for 'depth' without cost. */}
             {isMobile
-              ? null
+              ? <div className="absolute inset-0 z-1 pointer-events-none" style={{ background: `linear-gradient(to bottom, ${isLightMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)'} 0%, transparent 15%)`, mixBlendMode: isLightMode ? 'plus-lighter' : 'overlay' }} />
               : <div className="absolute inset-0 z-1 pointer-events-none" style={{ backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', mixBlendMode: isLightMode ? 'plus-lighter' : 'overlay', opacity: 1 }} />
             }
 
@@ -498,6 +461,7 @@ export default function App() {
                 aboutContentRef={aboutContentRef}
                 hoveredEl={hoveredEl}
                 setHoveredEl={setHoveredEl}
+                isColorPinned={isColorPinned}
                 setIsColorPinned={setIsColorPinned}
                 mutedColor={mutedColor}
               />
