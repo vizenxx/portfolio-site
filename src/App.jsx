@@ -42,7 +42,7 @@ export default function App() {
   const [isColorPinned, setIsColorPinned] = useState(false);
   const [activePage, setActivePage] = useState('home');
   // Debug Version
-  useEffect(() => { console.log('Portfolio Version: v13.27 (Adjusted Spot Count)'); }, []);
+  useEffect(() => { console.log('Portfolio Version: v13.29 (Global Keyframes Normalization)'); }, []);
 
   // Initialize Theme & Stateion to check immediately to avoid double-render (Desktop -> Mobile)
   const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false));
