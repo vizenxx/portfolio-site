@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useLayoutEffect } from 'react';
 import { ReactLenis } from '@studio-freight/react-lenis'
 import gsap from 'gsap';
 
@@ -485,6 +485,17 @@ export default function App() {
     window.addEventListener('click', handleGlobalClick); return () => window.removeEventListener('click', handleGlobalClick);
   }, [isLightMode, isColorPinned]);
 
+  // --- GLOBAL ENTRANCE (Atmosphere Layer) ---
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo(".atmosphere-layer",
+        { opacity: 0 },
+        { opacity: 1, duration: 2.5, ease: "sine.out", delay: 0.2 }
+      );
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
+
   // Update meta theme color dynamically
   useEffect(() => {
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -510,7 +521,7 @@ export default function App() {
         <div ref={containerRef} className={`relative w-full transition-colors duration-500 ease-in-out font-sans ${theme.text} ${theme.selection} ${isMobile ? '' : 'overflow-hidden'}`} style={{ '--muted-color': mutedColor }}>
 
           {/* UNIFIED BACKGROUNDS (Spotlight + Noise + Ripple) with Top/Bottom Edge Fade */}
-          <div className="fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000" style={{
+          <div className="fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000 atmosphere-layer" style={{
             opacity: 1,
             // Desktop: None | Mobile: Standard Black (15%) for UI transitions
             maskImage: isMobile

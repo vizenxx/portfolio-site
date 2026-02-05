@@ -1,7 +1,7 @@
 import { Sun, Moon, Menu, X, ArrowUpRight, Linkedin, Mail, GripVertical, Pin as PinIcon, Volume2, VolumeX, Pause, Play, Download } from 'lucide-react';
 import { HackerText } from './TextEffects';
 import Project from '../Project';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -167,9 +167,44 @@ export default function MobileLayout({
     mutedColor,
     isMobile
 }) {
+    const comp = useRef(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [bioIndex, setBioIndex] = useState(0);
     const [isRoleExpanded, setIsRoleExpanded] = useState(false);
+
+    // --- ENTRANCE ANIMATION (Mobile UI/UX Expert) ---
+    useLayoutEffect(() => {
+        const ctx = gsap.context(() => {
+            const tl = gsap.timeline({ defaults: { ease: "power4.out", duration: 1.0 } });
+
+            // Initial state
+            gsap.set(".mobile-hero-line, .mobile-role-box, #mobile-menu-pill, .mobile-footer-item", {
+                opacity: 0,
+                y: 15,
+                filter: "blur(5px)"
+            });
+
+            // Sequence
+            tl.to(".mobile-hero-line", {
+                opacity: 1, y: 0, filter: "blur(0px)",
+                stagger: 0.1, duration: 1.2, delay: 0.5
+            })
+                .to("#mobile-menu-pill", {
+                    opacity: 1, y: 0, filter: "blur(0px)",
+                    duration: 1.0
+                }, "-=0.8")
+                .to(".mobile-role-box", {
+                    opacity: 1, y: 0, filter: "blur(0px)",
+                    duration: 1.0
+                }, "-=0.6")
+                .to(".mobile-footer-item", {
+                    opacity: 1, y: 0, filter: "blur(0px)",
+                    stagger: 0.1
+                }, "-=0.8");
+
+        }, comp);
+        return () => ctx.revert();
+    }, []);
 
     // Magnetic Dock State (v13.13)
     const [isBottomDocked, setIsBottomDocked] = useState(false);
@@ -386,19 +421,19 @@ export default function MobileLayout({
 
     const bios = [
         <div className="flex flex-col gap-2 w-full">
-            <div className="flex flex-wrap justify-end gap-2"><span className={theme.highlight}><HackerText text="EMPOWERING" /></span></div>
-            <div className="flex flex-wrap justify-end gap-2"><span className="opacity-40"><HackerText text="Creative" /></span><span className={theme.highlight}><HackerText text="TEAMS" /></span><span className="opacity-40"><HackerText text="to" /></span></div>
-            <div className="flex flex-wrap justify-end gap-2"><span className={theme.highlight}><HackerText text="SCALE" /></span><span className={theme.highlight}><HackerText text="PRODUCTION" /></span></div>
-            <div className="flex flex-wrap justify-end gap-2"><span className="opacity-40"><HackerText text="without" /></span><span className="opacity-40"><HackerText text="compromising" /></span></div>
-            <div className="flex flex-wrap justify-end gap-2"><span className={theme.highlight}><HackerText text="INTEGRITY" /></span></div>
+            <div className="flex flex-wrap justify-end gap-2 mobile-hero-line"><span className={theme.highlight}><HackerText text="EMPOWERING" /></span></div>
+            <div className="flex flex-wrap justify-end gap-2 mobile-hero-line"><span className="opacity-40"><HackerText text="Creative" /></span><span className={theme.highlight}><HackerText text="TEAMS" /></span><span className="opacity-40"><HackerText text="to" /></span></div>
+            <div className="flex flex-wrap justify-end gap-2 mobile-hero-line"><span className={theme.highlight}><HackerText text="SCALE" /></span><span className={theme.highlight}><HackerText text="PRODUCTION" /></span></div>
+            <div className="flex flex-wrap justify-end gap-2 mobile-hero-line"><span className="opacity-40"><HackerText text="without" /></span><span className="opacity-40"><HackerText text="compromising" /></span></div>
+            <div className="flex flex-wrap justify-end gap-2 mobile-hero-line"><span className={theme.highlight}><HackerText text="INTEGRITY" /></span></div>
         </div>,
 
         <div className="flex flex-col gap-2 w-full">
-            <div className="flex flex-wrap justify-end gap-2"><span className={theme.highlight}><HackerText text="AI" /></span><span className="opacity-40"><HackerText text="didn't" /></span></div>
-            <div className="flex flex-wrap justify-end gap-2"><span className="opacity-40"><HackerText text="kill" /></span><span className={theme.highlight}><HackerText text="DESIGN" /></span><span className="opacity-40">;</span><span className="opacity-40"><HackerText text="it" /></span></div>
-            <div className="flex flex-wrap justify-end gap-2"><span className={theme.highlight}><HackerText text="is" /></span><span className={theme.highlight}><HackerText text="PART" /></span><span className={theme.highlight}><HackerText text="of" /></span></div>
-            <div className="flex flex-wrap justify-end gap-2"><span className="opacity-40"><HackerText text="the" /></span><span className={theme.highlight}><HackerText text="FUTURE" /></span></div>
-            <div className="flex flex-wrap justify-end gap-2"><span className={theme.highlight}><HackerText text="DESIGN" /></span></div>
+            <div className="flex flex-wrap justify-end gap-2 mobile-hero-line"><span className={theme.highlight}><HackerText text="AI" /></span><span className="opacity-40"><HackerText text="didn't" /></span></div>
+            <div className="flex flex-wrap justify-end gap-2 mobile-hero-line"><span className="opacity-40"><HackerText text="kill" /></span><span className={theme.highlight}><HackerText text="DESIGN" /></span><span className="opacity-40">;</span><span className="opacity-40"><HackerText text="it" /></span></div>
+            <div className="flex flex-wrap justify-end gap-2 mobile-hero-line"><span className={theme.highlight}><HackerText text="is" /></span><span className={theme.highlight}><HackerText text="PART" /></span><span className={theme.highlight}><HackerText text="of" /></span></div>
+            <div className="flex flex-wrap justify-end gap-2 mobile-hero-line"><span className="opacity-40"><HackerText text="the" /></span><span className={theme.highlight}><HackerText text="FUTURE" /></span></div>
+            <div className="flex flex-wrap justify-end gap-2 mobile-hero-line"><span className={theme.highlight}><HackerText text="DESIGN" /></span></div>
         </div>
     ];
 
@@ -426,7 +461,7 @@ export default function MobileLayout({
 
     return (
         // NATURAL SCROLL CONTAINER (No mask for performance)
-        <div className={`relative w-full z-40 ${theme.text}`} onClick={() => setIsRoleExpanded(false)}>
+        <div ref={comp} className={`relative w-full z-40 ${theme.text}`} onClick={() => setIsRoleExpanded(false)}>
 
             {/* CONTENT WRAPPER */}
             <div className="w-full flex flex-col">
@@ -442,7 +477,7 @@ export default function MobileLayout({
                     {/* ... content truncated ... */}
                     {/* Role ... */}
                     <div
-                        className={`absolute bottom-[15%] left-[24px] z-20 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${theme.text} pointer-events-auto`}
+                        className={`absolute bottom-[15%] left-[24px] z-20 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${theme.text} pointer-events-auto mobile-role-box`}
                         style={{ width: '40vw' }}
                     >
                         {/* ... content truncated ... */}
@@ -773,7 +808,7 @@ export default function MobileLayout({
             <div className={`fixed z-40 pointer-events-none transition-opacity duration-500 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
 
                 {/* Based in Malaysia */}
-                <div className={`fixed transition-all duration-400 ${theme.text} text-[10px] uppercase tracking-widest font-primary flex flex-col justify-center h-[40px]
+                <div className={`fixed transition-all duration-400 ${theme.text} text-[10px] uppercase tracking-widest font-primary flex flex-col justify-center h-[40px] mobile-footer-item
                     ${overlap.bottomLeft || overlap.bottomRight ? 'top-[30px] right-[24px] text-right items-end' : 'bottom-[20px] left-[24px] text-left items-start'}
                     ${shouldShowFooter ? 'translate-x-0 opacity-100' : '-translate-x-[120%] opacity-0'}`}>
                     <div className={isLightMode ? 'opacity-70' : 'opacity-50'}>Based in Malaysia</div>
@@ -783,7 +818,7 @@ export default function MobileLayout({
 
 
                 {/* Scroll Indicator */}
-                <div className={`fixed transition-all duration-400 ${theme.text} text-[10px] uppercase tracking-widest animate-pulse font-primary flex flex-col justify-center h-[40px]
+                <div className={`fixed transition-all duration-400 ${theme.text} text-[10px] uppercase tracking-widest animate-pulse font-primary flex flex-col justify-center h-[40px] mobile-footer-item
                     ${overlap.bottomRight ? 'bottom-[20px] left-[24px] text-left items-start' : 'bottom-[20px] right-[24px] text-right items-end'}
                     ${shouldShowFooter ? 'translate-x-0 opacity-100' : 'translate-x-[120%] opacity-0'}`}>
 

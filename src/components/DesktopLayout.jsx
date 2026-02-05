@@ -58,8 +58,47 @@ export default function DesktopLayout({
         }
     }, [activePage]);
 
-    // --- ENTRANCE ANIMATION REMOVED FOR STABILITY ---
+    // --- ENTRANCE ANIMATION (Mature UI/UX Approach) ---
+    useLayoutEffect(() => {
+        const ctx = gsap.context(() => {
+            const tl = gsap.timeline({ defaults: { ease: "power4.out", duration: 1.2 } });
 
+            // 1. Initial State: Set items hidden but avoid display:none to preserve layout
+            gsap.set(".hl-container, .cl-container, .fl-container, .hero-line, .corner-ui, .scroll-indicator", {
+                opacity: 0,
+                y: 20,
+                filter: "blur(10px)"
+            });
+
+            // 2. Orchestration Sequence
+            tl.to(".hl-container", {
+                opacity: 1, y: 0, filter: "blur(0px)",
+                stagger: 0.1, duration: 1.5, delay: 0.3
+            })
+                .to(".hero-line", {
+                    opacity: 1, y: 0, filter: "blur(0px)",
+                    stagger: 0.15, duration: 1.8
+                }, "-=1.2")
+                .to(".cl-container", {
+                    opacity: 1, y: 0, filter: "blur(0px)",
+                    duration: 1.5
+                }, "-=1.4")
+                .to(".fl-container", {
+                    opacity: 1, y: 0, filter: "blur(0px)",
+                    duration: 1.2
+                }, "-=1.2")
+                .to(".corner-ui", {
+                    opacity: 1, y: 0, filter: "blur(0px)",
+                    stagger: 0.1, duration: 1.2
+                }, "-=1.0")
+                .to(".scroll-indicator", {
+                    opacity: 1, y: 0, filter: "blur(0px)",
+                    duration: 1.5
+                }, "-=0.8");
+
+        }, comp);
+        return () => ctx.revert();
+    }, []);
 
     // --- BIO ROTATION ---
     useEffect(() => {
@@ -126,12 +165,12 @@ export default function DesktopLayout({
         <div ref={comp} className={`relative z-10 h-[100dvh] w-full pointer-events-none flex items-stretch px-[4vw] py-[5vh] overflow-hidden`}>
 
             {/* HR: Header Right (Persistent / Non-Transitioning) */}
-            <div className="absolute top-[5vh] right-[4vw] z-[100] pointer-events-auto flex justify-end">
+            <div className="absolute top-[5vh] right-[4vw] z-[100] pointer-events-auto flex justify-end corner-ui">
                 <ThemeToggleButtons />
             </div>
 
             {/* FR: Footer Right (Persistent / Non-Transitioning) */}
-            <div className="absolute bottom-[5vh] right-[4vw] z-[100] pointer-events-auto flex justify-end">
+            <div className="absolute bottom-[5vh] right-[4vw] z-[100] pointer-events-auto flex justify-end corner-ui">
                 <FooterRight />
             </div>
 
@@ -379,7 +418,7 @@ export default function DesktopLayout({
 
             {/* FC Overlay: Viewport Centered Scroll Indicator (Home only) */}
             {activePage === 'home' && (
-                <div className="absolute bottom-[4vh] left-1/2 -translate-x-1/2 pointer-events-none flex items-end h-[6vh] z-20 pb-1">
+                <div className="absolute bottom-[4vh] left-1/2 -translate-x-1/2 pointer-events-none flex items-end h-[6vh] z-20 pb-1 scroll-indicator">
                     <div className={`${theme.subText} text-[10px] uppercase tracking-widest opacity-60 animate-pulse`}>Scroll for more ↓</div>
                 </div>
             )}
