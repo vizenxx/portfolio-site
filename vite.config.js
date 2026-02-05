@@ -7,5 +7,6 @@ export default defineConfig({
   base: '/portfolio-site/',
   server: {
     host: true,
+    port: 5173,
   }
 })

@@ -6,6 +6,26 @@
 
 @layer base {
 
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+
+    100% {
+      transform: translateX(-33.3333%);
+    }
+  }
+
+  @keyframes marquee-reverse {
+    0% {
+      transform: translateX(-33.3333%);
+    }
+
+    100% {
+      transform: translateX(0);
+    }
+  }
+
   :root {
     /* DEFAULT: Dark mode grey-green */
     --page-bg: #1a231d;

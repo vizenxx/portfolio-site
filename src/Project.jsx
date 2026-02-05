@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ArrowUpRight, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { HackerText } from './components/TextEffects';
@@ -64,42 +64,252 @@ const projects = [
 ];
 
 // LIGHTBOX COMPONENT
-const Lightbox = ({ src, onClose }) => {
+// DESKTOP LIGHTBOX (Zoom, Drag, Wheel)
+const DesktopLightbox = ({ src, onClose }) => {
     const [isLoaded, setIsLoaded] = useState(false);
+    const [scale, setScale] = useState(1);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const containerRef = useRef(null);
+    const lastMousePos = useRef({ x: 0, y: 0 });
+    const longPressTimer = useRef(null);
+    const [isLongPress, setIsLongPress] = useState(false);
+
+    const MAX_ZOOM = 1.5;
+    const MIN_ZOOM = 0.8;
+
+    useEffect(() => {
+        const handleWheel = (e) => {
+            e.preventDefault();
+            const delta = -e.deltaY * 0.001;
+
+            setScale(prev => {
+                const newScale = prev + delta;
+                const OVER_MAX = MAX_ZOOM + 0.1;
+                const UNDER_MIN = MIN_ZOOM - 0.1;
+                return Math.min(OVER_MAX, Math.max(UNDER_MIN, newScale));
+            });
+
+            clearTimeout(window.zoomBounceTimeout);
+            window.zoomBounceTimeout = setTimeout(() => {
+                setScale(prev => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev)));
+            }, 150);
+        };
+        const container = containerRef.current;
+        if (container) {
+            container.addEventListener('wheel', handleWheel, { passive: false });
+        }
+        return () => {
+            if (container) container.removeEventListener('wheel', handleWheel);
+        };
+    }, []);
+
+    const handleMouseDown = (e) => {
+        if (e.button !== 0) return;
+        lastMousePos.current = { x: e.clientX, y: e.clientY };
+
+        longPressTimer.current = setTimeout(() => {
+            setIsLongPress(true);
+            setIsDragging(true);
+        }, 200);
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - lastMousePos.current.x;
+        const dy = e.clientY - lastMousePos.current.y;
+        setPosition(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+        lastMousePos.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const handleMouseUp = () => {
+        clearTimeout(longPressTimer.current);
+        if (!isLongPress && isLoaded) {
+            onClose();
+        }
+        setIsDragging(false);
+        setIsLongPress(false);
+    };
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[100] bg-black/98 backdrop-blur-2xl flex flex-col items-center justify-start animate-in fade-in duration-500 overflow-auto"
-            onClick={onClose}
+            ref={containerRef}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center animate-in fade-in duration-500 overflow-hidden select-none"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         >
             <button
-                className="fixed top-6 right-6 p-4 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all z-[110] backdrop-blur-md border border-white/10"
-                onClick={onClose}
+                className="fixed top-6 right-6 p-4 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all z-[110] backdrop-blur-md border border-white/10 pointer-events-auto"
+                onClick={(e) => { e.stopPropagation(); onClose(); }}
             >
                 <X size={24} />
             </button>
 
-            <div className={`w-fit h-fit min-h-screen flex items-center justify-center cursor-zoom-out p-12`}>
+            <div
+                className={`relative transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'} w-full h-full flex items-center justify-center`}
+            >
+                <img
+                    src={src}
+                    alt="Lightbox content"
+                    className="max-w-none w-full h-auto transition-transform duration-300 ease-out"
+                    style={{
+                        transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                        pointerEvents: 'none'
+                    }}
+                    onLoad={() => setIsLoaded(true)}
+                />
+            </div>
+
+            <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'} z-[110] pointer-events-none`}>
+                <div className="px-4 py-2 rounded-full bg-white/10 border border-white/5 backdrop-blur-md text-white/80 text-[10px] uppercase tracking-[0.2em] font-primary">
+                    Wheel to Zoom • Hold to Drag • Click to Close
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+};
+
+// MOBILE LIGHTBOX (Touch Gestures: Pinch Zoom, Drag, Pull-to-Close)
+const MobileLightbox = ({ src, onClose }) => {
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    // Transform State
+    const [scale, setScale] = useState(1);
+    const [translate, setTranslate] = useState({ x: 0, y: 0 });
+
+    // Gesture State
+    const gesture = useRef({
+        startDist: 0,
+        startScale: 1,
+        startPan: { x: 0, y: 0 },
+        startCenter: { x: 0, y: 0 },
+        isPinching: false,
+        isDragging: false,
+        lastTouch: { x: 0, y: 0 }
+    });
+
+    const imgRef = useRef(null);
+
+    // Initial Full-Height Calculation
+    // We rely on CSS object-contain + h-full to handle visual fit, 
+    // but we need to reset transform state on mount.
+
+    const handleTouchStart = (e) => {
+        if (e.touches.length === 2) {
+            // PINCH START
+            gesture.current.isPinching = true;
+            gesture.current.isDragging = false;
+
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            gesture.current.startDist = dist;
+            gesture.current.startScale = scale;
+
+        } else if (e.touches.length === 1) {
+            // DRAG START
+            gesture.current.isPinching = false;
+            gesture.current.isDragging = true;
+            gesture.current.lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            gesture.current.startPan = { ...translate };
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        if (gesture.current.isPinching && e.touches.length === 2) {
+            e.preventDefault(); // Prevent browser zoom
+
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+
+            // Calculate new scale
+            const scaleDelta = dist / gesture.current.startDist;
+            let newScale = gesture.current.startScale * scaleDelta;
+
+            // Soft limits with resistance
+            if (newScale > 1.5) {
+                // Resistance above 1.5
+                const extra = newScale - 1.5;
+                newScale = 1.5 + (extra * 0.3);
+            }
+            // Pinch-in to close threshold logic handled in end
+
+            setScale(newScale);
+
+        } else if (gesture.current.isDragging && e.touches.length === 1) {
+            // 1-Finger Drag
+            e.preventDefault();
+            const dx = e.touches[0].clientX - gesture.current.lastTouch.x;
+            const dy = e.touches[0].clientY - gesture.current.lastTouch.y;
+
+            // Update translate
+            setTranslate(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+
+            gesture.current.lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+    };
+
+    const handleTouchEnd = () => {
+        gesture.current.isDragging = false;
+        gesture.current.isPinching = false;
+
+        // BOUNCE / SNAP LOGIC via CSS Transition
+        // We simply set the target state, and the style prop's transition handles the smoothing
+        if (scale > 1.5) {
+            // Bounce back to max 1.5
+            setScale(1.5);
+        } else if (scale < 0.75) {
+            // Close if pinched in significantly
+            onClose();
+        } else if (scale < 1) {
+            // Bounce back to 1 (fill screen)
+            setScale(1);
+            setTranslate({ x: 0, y: 0 });
+        }
+    };
+
+    return createPortal(
+        <div
+            className="fixed inset-0 z-[100] bg-black/98 backdrop-blur-2xl flex items-center justify-center animate-in fade-in duration-500 overflow-hidden touch-none"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+        >
+            <button
+                className="fixed top-6 right-6 p-4 rounded-full bg-white/10 text-white z-[110] backdrop-blur-md border border-white/10"
+                onClick={(e) => { e.stopPropagation(); onClose(); }}
+            >
+                <X size={24} />
+            </button>
+
+            <div className={`w-full h-full flex items-center justify-center p-0`}>
                 <div
-                    className={`relative transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${isLoaded ? 'opacity-100' : 'opacity-0'} w-fit h-fit flex items-center justify-center`}
-                    style={{ pointerEvents: 'auto' }}
+                    className={`relative w-full h-full flex items-center justify-center transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                 >
                     <img
+                        ref={imgRef}
                         src={src}
-                        className={`h-[150vh] w-auto max-w-none shadow-2xl object-contain`}
-                        onLoad={() => setIsLoaded(true)}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onClose();
+                        alt="Lightbox content"
+                        className="w-full h-full object-contain pointer-events-none will-change-transform"
+                        style={{
+                            transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
+                            transition: gesture.current.isPinching || gesture.current.isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
                         }}
+                        onLoad={() => setIsLoaded(true)}
                     />
                 </div>
             </div>
 
-            <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'} z-[110]`}>
-                <div className="px-4 py-2 rounded-full bg-white/10 border border-white/5 backdrop-blur-md text-white/60 text-[10px] uppercase tracking-[0.2em] font-primary">
-                    Scroll to Explore • Tap to close
-                </div>
+            {/* Minimal Helper Text */}
+            <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/10 border border-white/5 backdrop-blur-md text-white/50 text-[9px] uppercase tracking-[0.2em] font-primary pointer-events-none transition-opacity duration-300 ${scale > 1.1 ? 'opacity-0' : 'opacity-100'}`}>
+                Pinch to Zoom • Drag to Move
             </div>
         </div>,
         document.body
@@ -286,7 +496,7 @@ export default function Project({ theme, colorScheme, isLightMode, placement, is
         const handleWheel = (e) => { e.preventDefault(); p.targetY += e.deltaY; const max = narrative.scrollHeight - narrative.clientHeight; p.targetY = Math.max(0, Math.min(p.targetY, max)); };
         const handleMouseDown = (e) => { p.isPointerDown = true; p.isDragging = true; p.lastY = e.clientY; p.momentum = 0; narrative.style.cursor = 'grabbing'; };
         const handleMouseMove = (e) => { if (!p.isDragging) return; const delta = p.lastY - e.clientY; p.lastY = e.clientY; p.targetY += delta * 1.5; p.velocity = delta * 1.5; const max = narrative.scrollHeight - narrative.clientHeight; p.targetY = Math.max(0, Math.min(p.targetY, max)); };
-        const handleMouseUp = () => { p.isPointerDown = false; if (p.isDragging) { p.isDragging = false; narrative.style.cursor = 'auto'; p.momentum = p.velocity; } };
+        const handleMouseUp = () => { p.isPointerDown = false; if (p.isDragging) { p.isDragging = false; narrative.style.cursor = 'grab'; p.momentum = p.velocity; } };
         const update = () => {
             const max = narrative.scrollHeight - narrative.clientHeight;
             if (max <= 0) { rafId = requestAnimationFrame(update); return; }
@@ -336,13 +546,20 @@ export default function Project({ theme, colorScheme, isLightMode, placement, is
                         {/* Glow with slower breathing animation */}
                         <div className="absolute -inset-2 bg-gradient-to-r from-white/10 to-transparent blur-3xl opacity-30 pointer-events-none" />
 
-                        <div className={`relative p-7 rounded-3xl border border-white/15 ${isLightMode ? 'bg-white/60' : 'bg-black/60'} backdrop-blur-3xl shadow-2xl overflow-hidden`}>
+                        <div
+                            className={`relative p-7 rounded-3xl border border-white/15 shadow-lg overflow-hidden transition-colors duration-500`}
+                            style={{
+                                backdropFilter: 'blur(5.6px) saturate(1.5)',
+                                WebkitBackdropFilter: 'blur(5.6px) saturate(1.5)',
+                                backgroundColor: isLightMode ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)',
+                            }}
+                        >
                             {/* Accent leak */}
-                            <div className="absolute -top-12 -right-12 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
+                            <div className="absolute -top-12 -right-12 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
 
                             <div className="flex flex-col gap-9 relative z-10">
                                 <div className="space-y-4">
-                                    <h2 className="text-5xl font-black uppercase tracking-tighter leading-[0.9] pr-4" style={{ color: colorScheme.base }}>
+                                    <h2 className="text-4xl font-light uppercase tracking-[0.2em] leading-[1.1] pr-4" style={{ color: colorScheme.base }}>
                                         <HackerText text={activeProject.title} />
                                     </h2>
                                     <div className="flex items-center gap-3">
@@ -417,7 +634,7 @@ export default function Project({ theme, colorScheme, isLightMode, placement, is
                         );
                     })}
                 </div>
-                {zoomImage && <Lightbox src={zoomImage} onClose={() => setZoomImage(null)} />}
+                {zoomImage && (isMobile ? <MobileLightbox src={zoomImage} onClose={() => setZoomImage(null)} /> : <DesktopLightbox src={zoomImage} onClose={() => setZoomImage(null)} />)}
             </div>
         );
     }
@@ -430,8 +647,14 @@ export default function Project({ theme, colorScheme, isLightMode, placement, is
                     <div ref={imageContainerRef} className="w-[110%] -ml-[5%] px-[5%] h-full overflow-y-auto scrollbar-none cursor-grab select-none relative" onScroll={handleScrollUpdate} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', touchAction: 'none' }}>
                         <div className="flex flex-col w-full gap-12 py-[50vh] transition-transform duration-150 overflow-visible relative">
                             {activeProject.images.map((img) => (
-                                <div key={img.id} id={`proj-img-${img.id}`} className="project-image-wrapper relative group overflow-visible flex-shrink-0 w-full h-auto rounded-[2px] will-change-transform cursor-zoom-in" onClick={() => setZoomImage(img.src)}>
+                                <div key={img.id} id={`proj-img-${img.id}`} className="project-image-wrapper relative group overflow-visible flex-shrink-0 w-full h-auto rounded-[2px] will-change-transform cursor-inherit">
                                     <img src={img.src} alt={img.id} draggable="false" className="w-full h-auto block pointer-events-none transition-transform duration-700" />
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setZoomImage(img.src); }}
+                                        className="absolute top-6 right-6 p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/60 opacity-0 group-hover:opacity-100 transition-all duration-500 scale-90 group-hover:scale-100 cursor-zoom-in z-20 pointer-events-auto"
+                                    >
+                                        <ZoomIn size={18} />
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -452,10 +675,17 @@ export default function Project({ theme, colorScheme, isLightMode, placement, is
             </div>
 
             {portalTarget && createPortal(
-                <div className={`group w-full h-full min-h-0 flex flex-col justify-between rounded-xl border ${theme.border} backdrop-blur-[1vw] bg-transparent py-5 px-6 shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] relative`}>
-                    <div ref={narrativeRef} className="w-full flex-1 min-h-0 overflow-y-auto scrollbar-none pb-2" onScroll={handleNarrativeScroll} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <div
+                    className={`group w-full h-full min-h-0 flex flex-col justify-between rounded-xl border ${theme.border} py-5 px-6 shadow-lg relative cursor-grab transition-colors duration-500`}
+                    style={{
+                        backdropFilter: 'blur(5.6px) saturate(1.5)',
+                        WebkitBackdropFilter: 'blur(5.6px) saturate(1.5)',
+                        backgroundColor: isLightMode ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)',
+                    }}
+                >
+                    <div ref={narrativeRef} className="w-full flex-1 min-h-0 overflow-y-auto scrollbar-none pb-2 select-none" onScroll={handleNarrativeScroll} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', touchAction: 'none' }}>
                         <div className={`w-full ${theme.text} font-light font-content mb-4`} style={{ textAlign: 'left', display: 'block' }}>
-                            <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: colorScheme.base }}>{activeProject.title}</h2>
+                            <h2 className="text-xl font-light uppercase tracking-[0.15em] mb-2" style={{ color: colorScheme.base }}>{activeProject.title}</h2>
                             <p className="text-[10px] uppercase tracking-[0.2em] opacity-40 mb-6">{activeProject.subtitle}</p>
                             {activeProject.description.map((block, idx) => {
                                 if (block.type === 'pivot-group') {
@@ -497,7 +727,7 @@ export default function Project({ theme, colorScheme, isLightMode, placement, is
                     </div>
                 </div>, portalTarget
             )}
-            {zoomImage && <Lightbox src={zoomImage} onClose={() => setZoomImage(null)} />}
+            {zoomImage && (isMobile ? <MobileLightbox src={zoomImage} onClose={() => setZoomImage(null)} /> : <DesktopLightbox src={zoomImage} onClose={() => setZoomImage(null)} />)}
         </div>
     );
 }

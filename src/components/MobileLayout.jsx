@@ -9,49 +9,142 @@ gsap.registerPlugin(ScrollTrigger);
 
 // Hybrid Marquee Component for Manual + Auto Scroll (v13.90)
 const MarqueeRow = ({ items, reverse = false, theme, isLightMode }) => {
-    const rowRef = useRef(null);
+    const containerRef = useRef(null);
     const contentRef = useRef(null);
+    const [isDragging, setIsDragging] = useState(false);
+
+    // Refs for physics state
+    const state = useRef({
+        x: 0,           // Current visual position (pixels)
+        speed: reverse ? -0.5 : 0.5, // Base auto-scroll speed
+        targetSpeed: reverse ? -0.5 : 0.5,
+        lastX: 0,       // For drag delta
+        dragVelocity: 0,
+        contentWidth: 0
+    });
 
     useEffect(() => {
-        const row = rowRef.current;
+        const container = containerRef.current;
         const content = contentRef.current;
-        if (!row || !content) return;
+        if (!container || !content) return;
 
-        // GSAP Parallax via transform (v13.97)
-        // This moves the items independently of the manual scroll container
-        const ctx = gsap.context(() => {
-            gsap.fromTo(content,
-                { x: reverse ? 100 : -100 },
-                {
-                    x: reverse ? -100 : 100,
-                    ease: "none",
-                    scrollTrigger: {
-                        trigger: row,
-                        start: "top bottom",
-                        end: "bottom top",
-                        scrub: 1,
-                    }
-                }
-            );
-        }, row);
+        // Measure content width (single set)
+        // We have 4 sets rendered. Real width of one set = total / 4
+        // Logic: The loop resets when we travel 1 set's width.
+        const measure = () => {
+            // We use 4 sets. 
+            state.current.contentWidth = content.scrollWidth / 4;
+        };
+        measure();
+        // Recalculate on resize
+        window.addEventListener('resize', measure);
 
-        return () => ctx.revert();
-    }, [reverse]);
+        // --- ANIMATION LOOP ---
+        let rafId;
+        const loop = () => {
+            const s = state.current;
+
+            if (isDragging) {
+                // While dragging, x is updated by touchmove events directly
+                // We just track velocity here for release inertia
+            } else {
+                // Apply velocity/speed
+                // Decay drag velocity back to target speed
+                s.speed += (s.targetSpeed - s.speed) * 0.05;
+                s.x -= s.speed;
+            }
+
+            // --- INFINITY LOGIC ---
+            // If x moves past -contentWidth (scrolled one full set left), snap back to 0
+            // If x moves past 0 (scrolled right), snap to -contentWidth
+            // We use standard modulo logic, but adjusted for negative numbers
+            if (s.contentWidth > 0) {
+                const wrap = s.contentWidth;
+                // standard wrap: ((x % w) + w) % w  mapped to 0..-w
+                // If we move LEFT (negative X), we want to wrap when < -wrap
+                // We want x to stay between 0 and -wrap
+
+                // Normalize X to positive range for modulo
+                // Then flip back to negative
+                // s.x = - ((-s.x) % wrap); -- simple version
+
+                // Robust version:
+                if (s.x <= -wrap) s.x += wrap;
+                if (s.x > 0) s.x -= wrap;
+            }
+
+            // Apply transform
+            // render 3d for acceleration
+            content.style.transform = `translate3d(${s.x}px, 0, 0)`;
+            rafId = requestAnimationFrame(loop);
+        };
+        rafId = requestAnimationFrame(loop);
+
+        return () => {
+            cancelAnimationFrame(rafId);
+            window.removeEventListener('resize', measure);
+        };
+    }, [isDragging, items, reverse]);
+
+
+    // --- TOUCH HANDLERS ---
+    const handleTouchStart = (e) => {
+        setIsDragging(true);
+        state.current.lastX = e.touches[0].clientX;
+        state.current.dragVelocity = 0;
+        // Pause auto-scroll visually by setting speed to 0 for decay logic,
+        // but we override speed directly during drag anyway.
+    };
+
+    const handleTouchMove = (e) => {
+        if (!isDragging) return;
+        const clientX = e.touches[0].clientX;
+        const delta = state.current.lastX - clientX; // Move left = positive delta
+        state.current.lastX = clientX;
+
+        // Update Position Directly 
+        state.current.x -= delta;
+
+        // Update velocity for throw (inverted because drag left = negative x movement)
+        state.current.speed = delta;
+    };
+
+    const handleTouchEnd = () => {
+        setIsDragging(false);
+        // On release, state.current.speed is already set to the last drag delta.
+        // The loop will automatically decay it back to state.current.targetSpeed
+    };
 
     return (
-        <div ref={rowRef} className="w-full py-1.5 overflow-hidden">
-            <div className="flex overflow-x-auto no-scrollbar cursor-grab active:cursor-grabbing select-none px-6">
-                <div
-                    ref={contentRef}
-                    className="flex gap-3 whitespace-nowrap"
-                >
-                    {/* 4 sets is plenty for transform-based parallax */}
-                    {[...items, ...items, ...items, ...items].map((skill, j) => (
-                        <div key={j} className={`px-5 py-2.5 rounded-full border ${theme.border} ${isLightMode ? 'bg-white' : 'bg-black'} text-center uppercase tracking-widest text-[9px] shadow-lg whitespace-nowrap active:scale-95 transition-all`}>
-                            {skill}
-                        </div>
-                    ))}
-                </div>
+        <div
+            ref={containerRef}
+            className="w-full py-2 overflow-hidden select-none touch-pan-y"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+        >
+            <div
+                ref={contentRef}
+                className="flex gap-4 whitespace-nowrap w-fit"
+                style={{ willChange: 'transform' }}
+            >
+                {/* 4 sets: A, B, C, D. 
+                    We loop over width of A. 
+                    If we go left past A, we see B. We snap X back to 0 (start of A). 
+                    If we go right past A start, we see D (wrapped). We snap X to end of A. 
+                */}
+                {[...items, ...items, ...items, ...items].map((skill, j) => (
+                    <div key={j}
+                        className={`px-6 py-3 rounded-full border ${theme.border} text-center uppercase tracking-[0.15em] text-[10px] shadow-lg whitespace-nowrap font-primary flex-shrink-0 transition-colors duration-500`}
+                        style={{
+                            backdropFilter: 'blur(5.6px) saturate(1.5)',
+                            WebkitBackdropFilter: 'blur(5.6px) saturate(1.5)',
+                            backgroundColor: isLightMode ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)',
+                        }}
+                    >
+                        {skill}
+                    </div>
+                ))}
             </div>
         </div>
     );
@@ -411,7 +504,7 @@ export default function MobileLayout({
                         </div>
                     </div>
 
-                    <div className="relative z-10 py-4 flex flex-col gap-2 -mt-10 overflow-hidden">
+                    <div className="relative z-10 py-4 flex flex-col gap-2 -mt-10 overflow-hidden touch-pan-y">
                         <MarqueeRow
                             items={['Creative Ops Strategy', 'Hybrid Workflow Design', 'AIGC Pipeline Arch.']}
                             theme={theme}
@@ -425,7 +518,7 @@ export default function MobileLayout({
                         />
                     </div>
 
-                    <div className={`${theme.text} px-6 pt-6 pb-20 space-y-8 font-content`}>
+                    <div className={`px-6 pt-6 pb-20 space-y-6 font-content text-[15px] leading-relaxed ${theme.subText} text-justify opacity-60`}>
                         <p>I am a Creative Operations Architect who helps Creative Teams escape production limits and maximize their impact.</p>
                         <p>With over 12 years of experience spanning roles from Head of Foundation to 2D Team Lead, I bridge the gap between traditional artistry and modern efficiency.</p>
                         <p>Unlike generalist designers, I specialize in Hybrid Design Systems. I have successfully implemented AI-based rendering workflows that scaled asset production for illustration, visual design, and mobile game projects, proving that AI can amplify output without sacrificing quality. I am here to help your studio build "AI-Resilient" pipelines that empower your artists to use technology for control, not replacement.</p>
@@ -435,15 +528,15 @@ export default function MobileLayout({
                             <div className="grid grid-cols-1 gap-12">
                                 <div className="flex flex-col gap-2">
                                     <span className="text-lg font-bold font-primary leading-none" style={{ color: colorScheme.base }}>Empowering Artists</span>
-                                    <span className={`${theme.subText} text-[14px] font-content opacity-70 leading-relaxed`}>Training teams to use AI as a tool for control, not a replacement.</span>
+                                    <span className={`${theme.subText} text-[15px] font-content opacity-60 leading-relaxed text-justify`}>Training teams to use AI as a tool for control, not a replacement.</span>
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <span className="text-lg font-bold font-primary leading-none" style={{ color: colorScheme.base }}>Protecting Integrity</span>
-                                    <span className={`${theme.subText} text-[14px] font-content opacity-70 leading-relaxed`}>Using AI for the "base," while human taste handles the "finish."</span>
+                                    <span className={`${theme.subText} text-[15px] font-content opacity-60 leading-relaxed text-justify`}>Using AI for the "base," while human taste handles the "finish."</span>
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <span className="text-lg font-bold font-primary leading-none" style={{ color: colorScheme.base }}>Scaling Output</span>
-                                    <span className={`${theme.subText} text-[14px] font-content opacity-70 leading-relaxed`}>Removing bottlenecks so teams can create more without burnout.</span>
+                                    <span className={`${theme.subText} text-[15px] font-content opacity-60 leading-relaxed text-justify`}>Removing bottlenecks so teams can create more without burnout.</span>
                                 </div>
                             </div>
                         </div>

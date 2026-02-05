@@ -256,13 +256,38 @@ export default function DesktopLayout({
                                     {/* Right-PC: Bio narrative (Left-Center aligned) */}
                                     <div className="flex-1 min-h-0 min-w-0 flex items-center pr-[2vw]" style={{ flex: 6 }}>
                                         <div
-                                            ref={localAboutBioRef}
+                                            ref={(el) => {
+                                                localAboutBioRef.current = el;
+                                            }}
                                             onScroll={handleBioScroll}
                                             id="about-bio-scroll-area"
-                                            className={`w-full overflow-y-auto pr-6 scrollbar-none ${theme.text} text-left max-h-full`}
+                                            className={`w-full overflow-y-auto pr-6 scrollbar-none ${theme.text} text-left max-h-full cursor-grab select-none`}
                                             style={{
                                                 msOverflowStyle: 'none',
-                                                scrollbarWidth: 'none'
+                                                scrollbarWidth: 'none',
+                                                touchAction: 'none'
+                                            }}
+                                            onMouseDown={(e) => {
+                                                const el = localAboutBioRef.current;
+                                                if (!el) return;
+                                                el.style.cursor = 'grabbing';
+                                                const startY = e.pageY - el.offsetTop;
+                                                const scrollTop = el.scrollTop;
+
+                                                const handleMouseMove = (moveEvent) => {
+                                                    const y = moveEvent.pageY - el.offsetTop;
+                                                    const walk = (y - startY) * 1.5;
+                                                    el.scrollTop = scrollTop - walk;
+                                                };
+
+                                                const handleMouseUp = () => {
+                                                    el.style.cursor = 'grab';
+                                                    window.removeEventListener('mousemove', handleMouseMove);
+                                                    window.removeEventListener('mouseup', handleMouseUp);
+                                                };
+
+                                                window.addEventListener('mousemove', handleMouseMove);
+                                                window.addEventListener('mouseup', handleMouseUp);
                                             }}
                                         >
                                             <div className="space-y-6 leading-relaxed text-[13px] text-left max-w-[35vw] font-content">
