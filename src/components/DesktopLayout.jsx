@@ -123,7 +123,7 @@ export default function DesktopLayout({
     );
 
     return (
-        <div ref={comp} className={`relative z-10 h-[100dvh] w-full pointer-events-none flex items-stretch px-[4vw] py-[5vh]`}>
+        <div ref={comp} className={`relative z-10 h-[100dvh] w-full pointer-events-none flex items-stretch px-[4vw] py-[5vh] overflow-hidden`}>
 
             {/* HR: Header Right (Persistent / Non-Transitioning) */}
             <div className="absolute top-[5vh] right-[4vw] z-[100] pointer-events-auto flex justify-end">

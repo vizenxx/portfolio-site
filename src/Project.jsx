@@ -390,6 +390,11 @@ export default function Project({ theme, colorScheme, isLightMode, placement, is
         };
 
         const handleMouseDown = (e) => {
+            // Ignore clicks in the side padding buffers (100px left/right) to prevent "invisible drag"
+            const rect = container.getBoundingClientRect();
+            const buffer = 100; // Matches padding
+            if (e.clientX < rect.left + buffer || e.clientX > rect.right - buffer) return;
+
             scrollPhysics.current.isPointerDown = true;
             scrollPhysics.current.isDragging = true;
             scrollPhysics.current.isScrubbing = false;
@@ -653,7 +658,7 @@ export default function Project({ theme, colorScheme, isLightMode, placement, is
         <div className="w-full h-full flex flex-col justify-center pointer-events-auto overflow-visible" onWheel={(e) => e.stopPropagation()}>
             <div className={`w-full h-full flex flex-col md:flex-row relative overflow-visible`}>
                 <div className="w-full h-1/2 md:h-full relative min-w-0 flex-shrink-0 overflow-visible">
-                    <div ref={imageContainerRef} className="w-[calc(100%+400px)] -ml-[200px] px-[200px] h-full overflow-y-auto scrollbar-none cursor-grab select-none relative" onScroll={handleScrollUpdate} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', touchAction: 'none' }}>
+                    <div ref={imageContainerRef} className="w-[calc(100%+200px)] -ml-[100px] px-[100px] h-full overflow-y-auto scrollbar-none cursor-grab select-none relative" onScroll={handleScrollUpdate} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', touchAction: 'none' }}>
                         <div className="flex flex-col w-full gap-12 py-[50vh] transition-transform duration-150 overflow-visible relative">
                             {activeProject.images.map((img) => (
                                 <div key={img.id} id={`proj-img-${img.id}`} className="project-image-wrapper relative group overflow-visible flex-shrink-0 w-full h-auto rounded-[2px] will-change-transform cursor-inherit">
