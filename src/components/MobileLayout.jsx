@@ -173,6 +173,7 @@ export default function MobileLayout({
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [bioIndex, setBioIndex] = useState(0);
     const [isRoleExpanded, setIsRoleExpanded] = useState(false);
+    const [isNearPortrait, setIsNearPortrait] = useState(false);
 
     // --- ENTRANCE ANIMATION (Specifically Timed Sequence) ---
     useLayoutEffect(() => {
@@ -184,10 +185,9 @@ export default function MobileLayout({
             gsap.set(".entry-highlight-mask", { scaleX: 0 }); // The highlight strike
             gsap.set(".mobile-hero-line", { opacity: 0 }); // Slogan
             gsap.set(".mobile-role-box", { opacity: 0, y: 30 }); // Role
-            gsap.set(".mobile-footer-item-left", { opacity: 0, x: -40 }); // Based (Left)
-            gsap.set(".mobile-footer-item-right", { opacity: 0, x: 40 }); // Icons (Right)
-            gsap.set("#mobile-menu-pill", { opacity: 0, x: 100, scale: 0.8 }); // Menu Pill (Slide from Right)
-            gsap.set(".mobile-scroll-indicator", { opacity: 0, filter: "blur(12px)", scale: 0.95 });
+            gsap.set(".mobile-footer-item-left", { opacity: 0, x: -40 });
+            gsap.set(".mobile-footer-item-right", { opacity: 0, x: 40, filter: "blur(12px)", scale: 0.95 });
+            gsap.set("#mobile-menu-pill", { opacity: 0, x: 100, scale: 0.8 });
 
             // 2. Orchestrated Sequence
             // - 0s: Highlight Starts
@@ -215,18 +215,24 @@ export default function MobileLayout({
 
                 // - 0.5s: Role & Outside elements
                 .to(".mobile-role-box", { opacity: 1, y: 0, duration: 1.2 }, 0.5)
-                .to(".mobile-footer-item-left", { opacity: 1, x: 0, duration: 1.2 }, 0.5)
-                .to(".mobile-footer-item-right", { opacity: 1, x: 0, duration: 1.2 }, "<")
+                .to(".mobile-footer-item-left", { opacity: 1, x: 0, duration: 1.2, clearProps: "all" }, 0.5)
+                .to(".mobile-footer-item-right", {
+                    opacity: 1,
+                    x: 0,
+                    duration: 1.2,
+                    clearProps: "all"
+                }, "<")
                 .to("#mobile-menu-pill", { opacity: 1, x: 0, scale: 1, duration: 1.2 }, "<")
 
-                // - 0.65s: Scroll for more
-                .to(".mobile-scroll-indicator", {
-                    opacity: 1,
-                    filter: "blur(0px)",
-                    scale: 1,
-                    duration: 1.5,
-                    ease: "sine.inOut"
-                }, 0.65);
+            // - 0.65s: Scroll for more (now part of right footer)
+            // Removed: .to(".mobile-scroll-indicator", {
+            //     opacity: 1,
+            //     filter: "blur(0px)",
+            //     scale: 1,
+            //     duration: 1.5,
+            //     ease: "sine.inOut",
+            //     clearProps: "all"
+            // }, 0.65);
 
         }, comp);
         return () => ctx.revert();
@@ -388,17 +394,21 @@ export default function MobileLayout({
         };
     }, [isDragging, menuSide]);
 
-
-    // Detect Scroll End (v13.20)
+    // Detect Scroll End (v14.05)
     useEffect(() => {
         const handleScroll = () => {
-            const scrolledToBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
-            const scrolledToTop = window.scrollY < 20; // 20px threshold for "At Top"
-            setIsAtBottom(scrolledToBottom);
-            setIsAtTop(scrolledToTop);
+            const scrollY = window.scrollY;
+            const screenH = window.innerHeight;
+            const docH = document.body.offsetHeight;
+
+            // Sensitive Top/Bottom detects
+            const atTop = scrollY < 5;
+            const atBottom = scrollY + screenH >= docH - 40;
+
+            setIsAtTop(atTop);
+            setIsAtBottom(atBottom);
         };
-        window.addEventListener('scroll', handleScroll);
-        // Initial check
+        window.addEventListener('scroll', handleScroll, { passive: true });
         handleScroll();
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -470,8 +480,8 @@ export default function MobileLayout({
     const overlayBg = isLightMode ? 'bg-white/95' : 'bg-black/95';
     const overlayText = isLightMode ? 'text-black' : 'text-white';
 
-    // Visibility Logic (v13.82)
-    // Show only at the very top or when project meta appears at bottom
+    // Visibility Logic (v14.01)
+    // Only show at the very top or very bottom.
     const shouldShowFooter = isAtTop || isAtBottom;
 
     // Force correct nav state at bottom of page
@@ -803,36 +813,41 @@ export default function MobileLayout({
             <div className={`fixed z-40 pointer-events-none transition-opacity duration-500 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
 
                 {/* Based in Malaysia */}
-                <div className={`fixed transition-all duration-400 ${theme.text} text-[10px] uppercase tracking-widest font-primary flex flex-col justify-center h-[40px] mobile-footer-item-left
+                <div className={`fixed transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${theme.text} text-[10px] uppercase tracking-widest font-primary flex flex-col justify-center h-[40px] mobile-footer-item-left
                     ${overlap.bottomLeft || overlap.bottomRight ? 'top-[30px] right-[24px] text-right items-end' : 'bottom-[20px] left-[24px] text-left items-start'}
                     ${shouldShowFooter ? 'translate-x-0 opacity-100' : '-translate-x-[120%] opacity-0'}`}>
                     <div className={isLightMode ? 'opacity-70' : 'opacity-50'}>Based in Malaysia</div>
-                    <div className={isLightMode ? 'opacity-40' : 'opacity-30'}>© 2026 (v13.79)</div>
+                    <div className={isLightMode ? 'opacity-40' : 'opacity-30'}>© 2026</div>
                 </div>
 
 
 
-                {/* Scroll Indicator */}
-                <div className={`fixed transition-all duration-400 ${theme.text} text-[10px] uppercase tracking-widest animate-pulse font-primary flex flex-col justify-center h-[40px] mobile-footer-item-right mobile-scroll-indicator
+                {/* Scroll/Social Indicator - Always slide out to RIGHT */}
+                <div className={`fixed transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${theme.text} text-[10px] uppercase tracking-widest font-primary flex flex-col justify-center h-[40px] mobile-footer-item-right
                     ${overlap.bottomRight ? 'bottom-[20px] left-[24px] text-left items-start' : 'bottom-[20px] right-[24px] text-right items-end'}
                     ${shouldShowFooter ? 'translate-x-0 opacity-100' : 'translate-x-[120%] opacity-0'}`}>
 
                     <div className="relative w-[80px] h-[20px]">
-                        {/* Scroll Label - Fades out to LEFT */}
-                        <span className={`absolute inset-0 flex items-center ${overlap.bottomRight ? 'justify-start' : 'justify-end'} transition-all duration-500 ease-out whitespace-nowrap 
-                            ${isAtBottom ? '-translate-x-4 opacity-0' : `translate-x-0 ${isLightMode ? 'opacity-70' : 'opacity-50'}`}`}>
-                            Scroll ↓
-                        </span>
-                        {/* End Icons - Fades in from RIGHT */}
-                        <div className={`absolute inset-0 flex items-center ${overlap.bottomRight ? 'justify-start' : 'justify-end'} gap-5 transition-all duration-500 ease-out 
-                            ${isAtBottom ? `translate-x-0 opacity-100` : 'translate-x-4 opacity-0 pointer-events-none'}`}>
-                            <a href="https://www.linkedin.com/in/vinz-tan/" target="_blank" rel="noopener noreferrer" className={`transition-all active:scale-95 ${isLightMode ? 'text-black' : 'text-white'}`} style={{ opacity: isLightMode ? 0.7 : 0.6 }}>
-                                <Linkedin size={20} strokeWidth={1.5} />
-                            </a>
-                            <a href="mailto:vinz.a.studio@gmail.com" className={`transition-all active:scale-95 ${isLightMode ? 'text-black' : 'text-white'}`} style={{ opacity: isLightMode ? 0.7 : 0.6 }}>
-                                <Mail size={20} strokeWidth={1.5} />
-                            </a>
-                        </div>
+                        {/* Scroll Label - ONLY at Top */}
+                        {isAtTop && !isAtBottom && (
+                            <span className={`absolute inset-0 flex items-center ${overlap.bottomRight ? 'justify-start' : 'justify-end'} transition-opacity duration-300 ease-out whitespace-nowrap 
+                                opacity-100`}>
+                                <span className={`${isLightMode ? 'opacity-70' : 'opacity-50'} animate-pulse`}>Scroll ↓</span>
+                            </span>
+                        )}
+
+                        {/* End Icons - ONLY at Bottom */}
+                        {isAtBottom && (
+                            <div className={`absolute inset-0 flex items-center ${overlap.bottomRight ? 'justify-start' : 'justify-end'} gap-5 transition-opacity duration-300 ease-out 
+                                opacity-100`}>
+                                <a href="https://www.linkedin.com/in/vinz-tan/" target="_blank" rel="noopener noreferrer" className={`transition-all active:scale-95 ${isLightMode ? 'text-black' : 'text-white'}`} style={{ opacity: isLightMode ? 0.7 : 0.6 }}>
+                                    <Linkedin size={20} strokeWidth={1.5} />
+                                </a>
+                                <a href="mailto:vinz.a.studio@gmail.com" className={`transition-all active:scale-95 ${isLightMode ? 'text-black' : 'text-white'}`} style={{ opacity: isLightMode ? 0.7 : 0.6 }}>
+                                    <Mail size={20} strokeWidth={1.5} />
+                                </a>
+                            </div>
+                        )}
                     </div>
                 </div>
 

@@ -31,7 +31,9 @@ export default function DesktopLayout({
     gccRef,
     grcRef,
     isPlaying,
-    toggleAudio
+    toggleAudio,
+    imageProgress = 0, // Pass from Project via App
+    onImageScroll
 }) {
     // --- LOCAL STATE ---
     const comp = useRef(null);
@@ -157,6 +159,11 @@ export default function DesktopLayout({
             </>
         )
     ];
+
+    // Desktop Scroll Visibility Logic (v13.96)
+    const isAtTop = activePage !== 'work' || imageProgress < 0.05;
+    const isAtBottom = activePage === 'work' && imageProgress > 0.95;
+    const shouldShowFooter = activePage !== 'work' || isAtTop || isAtBottom;
 
     const FooterLeft = () => (
         <div className="flex items-end justify-start w-full h-[6vh] pb-1">
@@ -388,7 +395,7 @@ export default function DesktopLayout({
                                     <div className="flex-1 min-h-0 relative h-full overflow-visible" style={{ flex: 4 }}>
                                         <div className="w-full h-full relative" id="project-lpc-target">
                                             {/* Project images will be rendered here or PC container will host it */}
-                                            <Project theme={theme} colorScheme={colorScheme} isLightMode={isLightMode} placement="lpc" />
+                                            <Project theme={theme} colorScheme={colorScheme} isLightMode={isLightMode} placement="lpc" onImageScroll={onImageScroll} />
                                         </div>
                                     </div>
                                     {/* RPC: Scrubber section */}

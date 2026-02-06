@@ -41,6 +41,7 @@ export default function App() {
   const [isLightMode, setIsLightMode] = useState(true);
   const [isColorPinned, setIsColorPinned] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [imageProgress, setImageProgress] = useState(0);
   const audioRef = useRef(null);
   const audioContextRef = useRef(null);
   const isAudioInitialized = useRef(false);
@@ -311,6 +312,7 @@ export default function App() {
     // CRITICAL FIX: Disable GSAP page transitions on Mobile or if refs are missing
     if (isMobile || !grcRef.current) {
       setActivePage(newPage);
+      setImageProgress(0); // Reset scroll position when switching pages (v13.96)
       return;
     }
 
@@ -321,6 +323,7 @@ export default function App() {
       const tl = gsap.timeline({
         onComplete: () => {
           setActivePage(newPage); randomizeSpots();
+          setImageProgress(0); // Reset scroll position when switching pages (v13.96)
           trailRipplesRef.current = [];
           clickRipplesRef.current = [];
 
@@ -714,6 +717,8 @@ export default function App() {
                 mutedColor={mutedColor}
                 isPlaying={isPlaying}
                 toggleAudio={toggleAudio}
+                imageProgress={imageProgress}
+                onImageScroll={setImageProgress}
               />
             )}
           </div>

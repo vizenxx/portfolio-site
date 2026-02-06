@@ -137,8 +137,17 @@ const DesktopLightbox = ({ src, onClose }) => {
             className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center animate-in fade-in duration-500 overflow-hidden select-none"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
+            onMouseUp={() => {
+                clearTimeout(longPressTimer.current);
+                setIsDragging(false);
+                setIsLongPress(false);
+            }}
+            onMouseLeave={() => {
+                clearTimeout(longPressTimer.current);
+                setIsDragging(false);
+                setIsLongPress(false);
+            }}
+            onDoubleClick={onClose}
             style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         >
             <button
@@ -165,7 +174,7 @@ const DesktopLightbox = ({ src, onClose }) => {
 
             <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'} z-[110] pointer-events-none`}>
                 <div className="px-4 py-2 rounded-full bg-white/10 border border-white/5 backdrop-blur-md text-white/80 text-[10px] uppercase tracking-[0.2em] font-primary">
-                    Wheel to Zoom • Hold to Drag • Click to Close
+                    Wheel to Zoom • Hold to Drag • Double Click to Close
                 </div>
             </div>
         </div>,
@@ -316,7 +325,7 @@ const MobileLightbox = ({ src, onClose }) => {
     );
 };
 
-export default function Project({ theme, colorScheme, isLightMode, placement, isMobile }) {
+export default function Project({ theme, colorScheme, isLightMode, placement, isMobile, onImageScroll }) {
     const [selectedProjectId, setSelectedProjectId] = useState(null);
     const [zoomImage, setZoomImage] = useState(null);
 
@@ -363,7 +372,11 @@ export default function Project({ theme, colorScheme, isLightMode, placement, is
     const handleScrollUpdate = () => {
         if (!imageContainerRef.current || isMobile) return;
         const { scrollTop, scrollHeight, clientHeight } = imageContainerRef.current;
-        if (scrollHeight > clientHeight) setImageProgress(scrollTop / (scrollHeight - clientHeight));
+        if (scrollHeight > clientHeight) {
+            const progress = scrollTop / (scrollHeight - clientHeight);
+            setImageProgress(progress);
+            if (onImageScroll) onImageScroll(progress);
+        }
     };
 
     const handleNarrativeScroll = () => {
@@ -418,6 +431,14 @@ export default function Project({ theme, colorScheme, isLightMode, placement, is
             if (scrollPhysics.current.isDragging) {
                 scrollPhysics.current.isDragging = false;
                 container.style.cursor = 'grab';
+
+                const maxScroll = container.scrollHeight - container.clientHeight;
+                const progress = scrollPhysics.current.currentY / maxScroll;
+                setImageProgress(progress);
+                if (onImageScroll) onImageScroll(progress);
+
+                // Find active snap-section based on current scroll position
+                const center = scrollPhysics.current.currentY + container.clientHeight / 2;
                 scrollPhysics.current.momentum = scrollPhysics.current.velocity;
             }
         };
@@ -457,6 +478,9 @@ export default function Project({ theme, colorScheme, isLightMode, placement, is
             } else { p.currentY += (p.targetY - p.currentY) * 0.19; }
 
             container.scrollTop = p.currentY;
+            const progress = p.currentY / maxScroll;
+            setImageProgress(progress);
+            if (onImageScroll) onImageScroll(progress);
             const v = p.targetY - p.currentY; const vAbs = Math.abs(v);
             // Enhanced "Jelly" Physics (v13.92)
             // Curvature: Uses border-radius and slightly stronger rotation to simulate fluid bending
