@@ -58,6 +58,7 @@ const projects = [
             { id: "process-1", src: "/portfolio-site/projects/case9/4.jpg" },
         ]
     },
+    /*
     {
         id: "metamorphosis",
         title: "Metamorphosis",
@@ -94,6 +95,7 @@ const projects = [
             { id: "meta-main", src: "/portfolio-site/projects/case9/2.jpg" },
         ]
     }
+    */
 ];
 
 // ==========================================
@@ -362,6 +364,7 @@ const MobileLightbox = ({ src, onClose }) => {
 };
 
 const ProjectSwitcher = ({ projects, activeId, onSwitch, theme, colorScheme, isLightMode }) => {
+    if (!projects || projects.length <= 1) return null;
     const activeIndex = projects.findIndex(p => p.id === activeId);
     const handlePrev = (e) => { e.stopPropagation(); onSwitch(projects[(activeIndex - 1 + projects.length) % projects.length].id); };
     const handleNext = (e) => { e.stopPropagation(); onSwitch(projects[(activeIndex + 1) % projects.length].id); };

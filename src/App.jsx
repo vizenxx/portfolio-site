@@ -39,7 +39,7 @@ export default function App() {
     return palette[Math.floor(Math.random() * palette.length)];
   };
 
-  const [isLightMode, setIsLightMode] = useState(true);
+  const [isLightMode, setIsLightMode] = useState(false);
   const [isColorPinned, setIsColorPinned] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [imageProgress, setImageProgress] = useState(0);

@@ -341,6 +341,21 @@ export default function LandscapeTabletLayout({
                                 <p>I am a Creative Operations Architect who helps Creative Teams escape production limits and maximize their impact.</p>
                                 <p>With over 12 years of experience spanning roles from Art & Design Educator to Design Team Lead, I bridge the gap between traditional artistry and modern efficiency.</p>
                                 <p>AI can amplify output without sacrificing quality. I am here to help your studio build "AI-Resilient" pipelines that empower your artists to use technology for control, not replacement.</p>
+                                <div className="mt-6">
+                                    <h4 className={`text-xs uppercase tracking-widest font-normal ${theme.subText} mb-4 font-primary`}>My Focus:</h4>
+                                    <ul className="space-y-4 list-none pl-0">
+                                        {[
+                                            { t: 'Empowering Artists', d: 'Training teams to use AI as a tool for control, not a replacement.' },
+                                            { t: 'Protecting Integrity', d: 'Using AI for the "base," while human taste handles the "finish."' },
+                                            { t: 'Scaling Output', d: 'Removing bottlenecks so teams can create more without burnout.' }
+                                        ].map((item, i) => (
+                                            <li key={i} className="pl-4 border-l-2" style={{ borderColor: 'rgba(255,255,255,0.25)' }}>
+                                                <span className="font-normal block mb-1 font-primary">{item.t}</span>
+                                                <span className={`${theme.subText} text-[13px] font-content`}>{item.d}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
