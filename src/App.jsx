@@ -4,7 +4,8 @@ import gsap from 'gsap';
 
 // Components
 import DesktopLayout from './components/DesktopLayout';
-import MobileLayout from './components/MobileLayout';
+import LandscapeTabletLayout from './components/LandscapeTabletLayout';
+import PortraitMobileLayout from './components/PortraitMobileLayout';
 
 // Shared Utilities
 // Kept locally for now
@@ -184,28 +185,36 @@ export default function App() {
   // Debug Version
   useEffect(() => { console.log('Portfolio Version: v13.92 (Refined Auto-start Fallback)'); }, []);
 
-  // Initialize Theme & Stateion to check immediately to avoid double-render (Desktop -> Mobile)
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    // Mobile view if width < 768 OR if screen is in Portrait orientation
-    return window.innerWidth < 768 || window.innerHeight > window.innerWidth;
+  // Layout detection (v14.07)
+  const [layoutMode, setLayoutMode] = useState(() => {
+    if (typeof window === 'undefined') return 'desktop';
+    const isPortrait = window.innerHeight > window.innerWidth;
+    if (isPortrait || window.innerWidth < 768) return 'portrait-mobile';
+    if (window.innerWidth < 1200) return 'landscape-tablet';
+    return 'desktop';
   });
 
+  // Keep isMobile for legacy logic check (music, etc)
+  const isMobile = layoutMode === 'portrait-mobile' || layoutMode === 'landscape-tablet';
+
   useEffect(() => {
-    const checkMobile = () => {
-      // Logic: Mobile view for narrow screens OR any portrait orientation
-      setIsMobile(window.innerWidth < 768 || window.innerHeight > window.innerWidth);
+    const checkLayout = () => {
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const w = window.innerWidth;
+      if (isPortrait || w < 768) setLayoutMode('portrait-mobile');
+      else if (w < 1200) setLayoutMode('landscape-tablet');
+      else setLayoutMode('desktop');
     };
     const setAppHeight = () => {
       document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
     };
-    checkMobile();
+    checkLayout();
     setAppHeight();
     window.addEventListener('resize', () => {
-      checkMobile();
+      checkLayout();
       setAppHeight();
     });
-    return () => window.removeEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkLayout);
   }, []);
 
   // --- STATE FOR DESKTOP (Can be shared if needed) ---
@@ -223,11 +232,45 @@ export default function App() {
   }, [roles, isRoleHovered]);
 
   const [nameColor, setNameColor] = useState(() => getContrastSafeColor(true));
+  const isTouchDevice = useRef(false);
+  const [isTouchActive, setIsTouchActive] = useState(false);
   const trailRipplesRef = useRef([]);
   const clickRipplesRef = useRef([]);
   const spotsRef = useRef([]);
   const clickShockwaveRef = useRef(0);
   const targetConfigRef = useRef({ h: 0, s: 0, l: 0, a: 0.1 });
+
+  // Global interaction listeners (v14.07)
+  useEffect(() => {
+    const handleFirstInteraction = (e) => {
+      if (e.pointerType === 'touch' || e.type === 'touchstart') {
+        isTouchDevice.current = true;
+      }
+      // Remove this listener after the first interaction
+      window.removeEventListener('pointerdown', handleFirstInteraction, { once: true });
+      window.removeEventListener('touchstart', handleFirstInteraction, { once: true });
+    };
+
+    const handleTouchStart = () => {
+      isTouchDevice.current = true;
+      setIsTouchActive(true);
+      // Reset reactive hover states on any touch interaction
+      setHoveredNav(null);
+      setHoveredEl(null);
+      setIsRoleHovered(false);
+      if (cursorRef.current) cursorRef.current.style.opacity = '0';
+    };
+
+    window.addEventListener('pointerdown', handleFirstInteraction, { once: true });
+    window.addEventListener('touchstart', handleFirstInteraction, { once: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true }); // Passive for performance
+
+    return () => {
+      window.removeEventListener('pointerdown', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleTouchStart);
+    };
+  }, []);
 
   const randomizeSpots = () => {
     spotsRef.current = [];
@@ -309,6 +352,11 @@ export default function App() {
   // Handle Page Transition (GSAP)
   const handlePageChange = (newPage) => {
     if (newPage === activePage || isTransitioning.current) return;
+
+    if (layoutMode === 'landscape-tablet') {
+      setActivePage(newPage);
+      return;
+    }
     // CRITICAL FIX: Disable GSAP page transitions on Mobile or if refs are missing
     if (isMobile || !grcRef.current) {
       setActivePage(newPage);
@@ -363,7 +411,13 @@ export default function App() {
 
   const colorScheme = useMemo(() => {
     const hsl = hexToHSL(nameColor); const compHue = (hsl.h + 180) % 360;
-    return { base: nameColor, compHSL: { h: compHue, s: hsl.s, l: hsl.l }, compString: HSLToRGBString(compHue, hsl.s, hsl.l) };
+    const secondaryColor = HSLToRGBString(compHue, hsl.s, hsl.l);
+    return {
+      base: nameColor,
+      compHSL: { h: compHue, s: hsl.s, l: hsl.l },
+      compString: secondaryColor,
+      secondary: secondaryColor // Alias for clarity
+    };
   }, [nameColor]);
 
   useEffect(() => { if (!isColorPinned) setNameColor(getContrastSafeColor(isLightMode)); }, [isLightMode, isColorPinned]);
@@ -495,6 +549,7 @@ export default function App() {
     setTimeout(resizeCanvas, 50);
 
     const handleMouseMove = (e) => {
+      if (e.pointerType === 'touch' || isTouchDevice.current) return;
       const x = e.clientX;
       const y = e.clientY;
       const now = Date.now();
@@ -519,6 +574,16 @@ export default function App() {
       lastPos = { x, y };
     };
     window.addEventListener('mousemove', handleMouseMove);
+
+    // KILL STICKY HOVER (v14.07)
+    const handleGlobalTouch = () => {
+      isTouchDevice.current = true;
+      setHoveredNav(null);
+      setHoveredEl(null);
+      setIsRoleHovered(false);
+      if (cursorRef.current) cursorRef.current.style.opacity = '0';
+    };
+    window.addEventListener('touchstart', handleGlobalTouch, { passive: true });
 
     const handlePointerDown = (e) => {
       // Prevent ripple if clicking on the mobile menu (drag or buttons) or dragging images
@@ -623,7 +688,11 @@ export default function App() {
 
   // Global Click handler for color change
   useEffect(() => {
-    const handleGlobalClick = (e) => { if (!isColorPinned && !e.target.closest('button') && !e.target.closest('a')) setNameColor(getContrastSafeColor(isLightMode)); };
+    const handleGlobalClick = (e) => {
+      if (!isColorPinned && !e.target.closest('button') && !e.target.closest('a') && !e.target.closest('.mobile-role-box')) {
+        setNameColor(getContrastSafeColor(isLightMode));
+      }
+    };
     window.addEventListener('click', handleGlobalClick); return () => window.removeEventListener('click', handleGlobalClick);
   }, [isLightMode, isColorPinned]);
 
@@ -688,8 +757,10 @@ export default function App() {
 
 
           {/* CONTENT */}
-          <div className={`relative z-10 ${isMobile ? '' : 'h-full w-full'}`}>
-            {!isMobile && (
+          <div className={`relative z-10 ${layoutMode === 'desktop' ? 'h-full w-full' : ''}`}>
+
+            {/* 1. Desktop Layout */}
+            {layoutMode === 'desktop' && (
               <DesktopLayout
                 activePage={activePage}
                 handlePageChange={handlePageChange}
@@ -719,15 +790,51 @@ export default function App() {
                 toggleAudio={toggleAudio}
                 imageProgress={imageProgress}
                 onImageScroll={setImageProgress}
+                isTouch={isTouchActive}
+              />
+            )}
+
+            {/* 2. Landscape Tablet Layout */}
+            {layoutMode === 'landscape-tablet' && (
+              <LandscapeTabletLayout
+                activePage={activePage}
+                handlePageChange={handlePageChange}
+                clickedItem={clickedItem}
+                setClickedItem={setClickedItem}
+                hoveredNav={hoveredNav}
+                setHoveredNav={setHoveredNav}
+                isLightMode={isLightMode}
+                setIsLightMode={setIsLightMode}
+                theme={theme}
+                colorScheme={colorScheme}
+                nameColor={nameColor}
+                roles={roles}
+                currentRoleIndex={currentRoleIndex}
+                isRoleHovered={isRoleHovered}
+                setIsRoleHovered={setIsRoleHovered}
+                grcRef={grcRef}
+                gccRef={gccRef}
+                detailPanelRef={detailPanelRef}
+                aboutContentRef={aboutContentRef}
+                hoveredEl={hoveredEl}
+                setHoveredEl={setHoveredEl}
+                isColorPinned={isColorPinned}
+                setIsColorPinned={setIsColorPinned}
+                mutedColor={mutedColor}
+                isPlaying={isPlaying}
+                toggleAudio={toggleAudio}
+                imageProgress={imageProgress}
+                onImageScroll={setImageProgress}
+                isTouch={isTouchActive}
               />
             )}
           </div>
 
         </div>
 
-        {/* Mobile Layout - Rendered LAST to ensure top z-index priority and clickable */}
-        {isMobile && (
-          <MobileLayout
+        {/* 3. Portrait Mobile Layout - Rendered LAST to ensure top z-index priority and clickable */}
+        {layoutMode === 'portrait-mobile' && (
+          <PortraitMobileLayout
             activePage={activePage}
             handlePageChange={handlePageChange}
             isLightMode={isLightMode}
@@ -742,9 +849,10 @@ export default function App() {
             isColorPinned={isColorPinned}
             setIsColorPinned={setIsColorPinned}
             mutedColor={mutedColor}
-            isMobile={isMobile}
+            isMobile={true}
             isPlaying={isPlaying}
             toggleAudio={toggleAudio}
+            isTouch={isTouchActive}
           />
         )}
       </div>

@@ -194,3 +194,25 @@
 .animate-marquee-reverse {
   animation: marquee 30s linear infinite reverse;
 }
+
+/* TOUCH DEVICE OPTIMIZATION (v14.07) */
+@media (hover: none) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Disable sticking hover highlights on touch */
+  .group:hover .group-hover\:opacity-100,
+  .group:hover .group-hover\:scale-110,
+  .hover\:opacity-100:hover,
+  .hover\:scale-110:hover {
+    opacity: inherit !important;
+    transform: inherit !important;
+  }
+
+  /* Ensure text selections don't stick as 'active' highlights */
+  a:active,
+  button:active {
+    background: transparent !important;
+  }
+}

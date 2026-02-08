@@ -33,16 +33,20 @@ export default function DesktopLayout({
     isPlaying,
     toggleAudio,
     imageProgress = 0, // Pass from Project via App
-    onImageScroll
+    onImageScroll,
+    isTouch
 }) {
     // --- LOCAL STATE ---
     const comp = useRef(null);
     const [bioIndex, setBioIndex] = useState(0);
     const [bioScrollData, setBioScrollData] = useState({ ratio: 0, visible: false });
     const localAboutBioRef = useRef(null);
+    const touchStart = useRef(0);
 
-    // Sync scroll from Bio (PC) to the external scrollbar (CR)
+    const bioPhysics = useRef({ currentY: 0, targetY: 0, velocity: 0, isDragging: false, lastY: 0, momentum: 0 });
+
     const handleBioScroll = (e) => {
+        if (bioPhysics.current.isDragging) return;
         const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
         const totalScrollable = scrollHeight - clientHeight;
         if (totalScrollable <= 0) {
@@ -50,16 +54,61 @@ export default function DesktopLayout({
             return;
         }
         const ratio = scrollTop / totalScrollable;
+        bioPhysics.current.currentY = scrollTop;
+        bioPhysics.current.targetY = scrollTop;
         setBioScrollData({ ratio, visible: true });
     };
 
-    // UseEffect to check initial overflow on About page
     useEffect(() => {
-        if (activePage === 'about' && localAboutBioRef.current) {
-            const el = localAboutBioRef.current;
-            const hasOverflow = el.scrollHeight > el.clientHeight;
-            setBioScrollData(prev => ({ ...prev, visible: hasOverflow }));
-        }
+        if (activePage !== 'about' || !localAboutBioRef.current) return;
+        const el = localAboutBioRef.current;
+        const p = bioPhysics.current;
+        let rafId;
+
+        const handleTouchStart = (e) => {
+            e.stopPropagation();
+            p.isDragging = true;
+            p.lastY = e.touches[0].clientY;
+            p.momentum = 0;
+        };
+        const handleTouchMove = (e) => {
+            e.stopPropagation();
+            if (!p.isDragging) return;
+            const delta = (p.lastY - e.touches[0].clientY);
+            p.lastY = e.touches[0].clientY;
+            p.targetY += delta * 1.5;
+            p.velocity = delta * 1.5;
+            const max = el.scrollHeight - el.clientHeight;
+            p.targetY = Math.max(0, Math.min(p.targetY, max));
+        };
+        const handleTouchEnd = (e) => {
+            e.stopPropagation();
+            p.isDragging = false;
+            p.momentum = p.velocity;
+        };
+
+        const update = () => {
+            const max = el.scrollHeight - el.clientHeight;
+            if (max > 0) {
+                if (!p.isDragging) { p.targetY += p.momentum; p.momentum *= 0.95; }
+                p.targetY = Math.max(0, Math.min(p.targetY, max));
+                p.currentY += (p.targetY - p.currentY) * 0.1;
+                el.scrollTop = p.currentY;
+                setBioScrollData({ ratio: p.currentY / max, visible: true });
+            }
+            rafId = requestAnimationFrame(update);
+        };
+
+        el.addEventListener('touchstart', handleTouchStart, { passive: false });
+        window.addEventListener('touchmove', handleTouchMove, { passive: false });
+        window.addEventListener('touchend', handleTouchEnd);
+        rafId = requestAnimationFrame(update);
+        return () => {
+            el.removeEventListener('touchstart', handleTouchStart);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', handleTouchEnd);
+            cancelAnimationFrame(rafId);
+        };
     }, [activePage]);
 
     // --- ENTRANCE ANIMATION (Specifically Timed Sequence) ---
@@ -178,15 +227,15 @@ export default function DesktopLayout({
 
     const FooterRight = () => (
         <div className="flex items-end gap-7 h-[6vh] pb-1">
-            <a href="https://www.linkedin.com/in/vinz-tan/" target="_blank" rel="noopener noreferrer" className={`transition-colors duration-300 transform hover:scale-110`} onMouseEnter={() => setHoveredEl('linkedin')} onMouseLeave={() => setHoveredEl(null)} style={{ color: hoveredEl === 'linkedin' ? colorScheme.compString : (isLightMode ? '#000' : '#fff') }} aria-label="LinkedIn"><Linkedin size={20} /></a>
-            <a href="mailto:vinz.a.studio@gmail.com" className={`transition-colors duration-300 transform hover:scale-110`} onMouseEnter={() => setHoveredEl('mail')} onMouseLeave={() => setHoveredEl(null)} style={{ color: hoveredEl === 'mail' ? colorScheme.compString : (isLightMode ? '#000' : '#fff') }} aria-label="Email"><Mail size={20} /></a>
+            <a href="https://www.linkedin.com/in/vinz-tan/" target="_blank" rel="noopener noreferrer" className={`transition-colors duration-300 transform hover:scale-110`} onMouseEnter={() => !isTouch && setHoveredEl('linkedin')} onMouseLeave={() => !isTouch && setHoveredEl(null)} style={{ color: hoveredEl === 'linkedin' ? colorScheme.compString : (isLightMode ? '#000' : '#fff') }} aria-label="LinkedIn"><Linkedin size={20} /></a>
+            <a href="mailto:vinz.a.studio@gmail.com" className={`transition-colors duration-300 transform hover:scale-110`} onMouseEnter={() => !isTouch && setHoveredEl('mail')} onMouseLeave={() => !isTouch && setHoveredEl(null)} style={{ color: hoveredEl === 'mail' ? colorScheme.compString : (isLightMode ? '#000' : '#fff') }} aria-label="Email"><Mail size={20} /></a>
         </div>
     );
 
     const ThemeToggleButtons = () => (
         <div className="flex items-center gap-2">
             <button onClick={(e) => { e.stopPropagation(); setIsColorPinned(!isColorPinned); }} className={`group relative pl-3 py-3 pr-0 transition-all duration-300 ${isColorPinned ? 'opacity-100 scale-110' : 'opacity-50 hover:opacity-100 hover:scale-110'}`} style={{ color: isColorPinned ? colorScheme.compString : (isLightMode ? '#000' : '#fff') }} aria-label="Pin Color"><PinIcon size={22} strokeWidth={2.1} className={`transition-transform duration-300 ${isColorPinned ? "fill-current" : "group-hover:-rotate-12 group-hover:scale-110"}`} /><span className={`absolute top-1/2 right-full mr-2 -translate-y-1/2 px-2 py-1 text-[10px] uppercase tracking-wider rounded bg-black/50 text-white backdrop-blur-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`}>Pin the Color</span></button>
-            <button onClick={(e) => { e.stopPropagation(); setIsLightMode(!isLightMode); }} onMouseEnter={() => setHoveredEl('theme')} onMouseLeave={() => setHoveredEl(null)} className={`pl-3 py-3 pr-0 transition-all duration-300 opacity-50 hover:opacity-100 hover:scale-110 translate-x-[2px]`} style={{ color: isLightMode ? '#000' : '#fff' }} aria-label="Toggle Theme">{isLightMode ? <Moon size={24} className={hoveredEl === 'theme' ? 'animate-moon-swing' : ''} /> : <Sun size={24} className={hoveredEl === 'theme' ? 'animate-sun-spin' : ''} />}</button>
+            <button onClick={(e) => { e.stopPropagation(); setIsLightMode(!isLightMode); }} onMouseEnter={() => !isTouch && setHoveredEl('theme')} onMouseLeave={() => !isTouch && setHoveredEl(null)} className={`pl-3 py-3 pr-0 transition-all duration-300 opacity-50 hover:opacity-100 hover:scale-110 translate-x-[2px]`} style={{ color: isLightMode ? '#000' : '#fff' }} aria-label="Toggle Theme">{isLightMode ? <Moon size={24} className={hoveredEl === 'theme' ? 'animate-moon-swing' : ''} /> : <Sun size={24} className={hoveredEl === 'theme' ? 'animate-sun-spin' : ''} />}</button>
             <button onClick={(e) => { e.stopPropagation(); toggleAudio(undefined, true); }} className={`group relative pl-3 py-3 pr-0 transition-all duration-300 ${isPlaying ? 'opacity-100' : 'opacity-40 hover:opacity-100 hover:scale-110'}`} style={{ color: isPlaying ? colorScheme.compString : (isLightMode ? '#000' : '#fff') }} aria-label="Toggle Audio">
                 <AudioLines size={22} strokeWidth={2.1} className={isPlaying ? "animate-pulse" : ""} />
                 <span className={`absolute top-1/2 right-full mr-2 -translate-y-1/2 px-2 py-1 text-[10px] uppercase tracking-wider rounded bg-black/50 text-white backdrop-blur-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`}>{isPlaying ? 'Mute' : 'Play Music'}</span>
@@ -194,8 +243,46 @@ export default function DesktopLayout({
         </div>
     );
 
+    // --- TOUCH SWIPE LOGIC (For tablets/touch laptops) ---
+    useEffect(() => {
+        if (!comp.current) return;
+        const el = comp.current;
+        const handleNativeTouchStart = (e) => { touchStart.current = e.touches[0].clientY; };
+        const handleNativeTouchEnd = (e) => {
+            // Divide Swiping Zones (v14.07)
+            // 'home' page allows swiping everywhere.
+            // 'work' and 'about' only allow swiping in the Left Sidebar (GLC) for page transitions.
+            if (activePage !== 'home') {
+                const isInsideContent = gccRef.current?.contains(e.target) || grcRef.current?.contains(e.target);
+                if (isInsideContent) return;
+            }
+
+            const touchEnd = e.changedTouches[0].clientY;
+            const delta = touchStart.current - touchEnd;
+            if (Math.abs(delta) < 50) return;
+
+            if (delta > 0) {
+                if (activePage === 'home') handlePageChange('work');
+                else if (activePage === 'work') handlePageChange('about');
+                else if (activePage === 'about') handlePageChange('home');
+            } else {
+                if (activePage === 'home') handlePageChange('about');
+                else if (activePage === 'about') handlePageChange('work');
+                else if (activePage === 'work') handlePageChange('home');
+            }
+        };
+
+        el.addEventListener('touchstart', handleNativeTouchStart);
+        el.addEventListener('touchend', handleNativeTouchEnd);
+        return () => {
+            el.removeEventListener('touchstart', handleNativeTouchStart);
+            el.removeEventListener('touchend', handleNativeTouchEnd);
+        };
+    }, [activePage]);
+
     return (
-        <div ref={comp} className={`relative z-10 h-[100dvh] w-full pointer-events-none flex items-stretch px-[4vw] py-[5vh] overflow-hidden`}>
+        <div ref={comp}
+            className={`relative z-10 h-[100dvh] w-full pointer-events-auto flex items-stretch px-[4vw] py-[5vh] overflow-hidden`}>
 
             {/* HR: Header Right (Persistent / Non-Transitioning) */}
             <div className="absolute top-[5vh] right-[4vw] z-[100] pointer-events-auto flex justify-end corner-ui">
@@ -218,8 +305,8 @@ export default function DesktopLayout({
                                 href="#"
                                 onClick={(e) => { e.preventDefault(); handlePageChange('about'); setClickedItem('Vinz Tan'); setTimeout(() => setClickedItem(null), 300); }}
                                 className={`group relative tracking-[0.2em] uppercase font-primary transition-all duration-300 flex items-center gap-0 ${activePage === 'work' ? 'text-base opacity-40 font-medium' : 'text-lg font-normal'}`}
-                                onMouseEnter={() => setHoveredNav('Vinz Tan')}
-                                onMouseLeave={() => setHoveredNav(null)}
+                                onMouseEnter={() => !isTouch && setHoveredNav('Vinz Tan')}
+                                onMouseLeave={() => !isTouch && setHoveredNav(null)}
                                 style={{ color: clickedItem === 'Vinz Tan' ? (isLightMode ? '#ffffff' : '#000000') : (activePage === 'about' || activePage === 'home') ? colorScheme.base : 'inherit' }}
                             >
                                 <span className="absolute inset-0 transition-all duration-300" style={{ backgroundColor: colorScheme.compString, opacity: clickedItem === 'Vinz Tan' ? 1 : 0, transformOrigin: 'left center', transform: clickedItem === 'Vinz Tan' ? 'scaleX(1)' : 'scaleX(0)', transitionProperty: 'opacity, transform', transitionTimingFunction: 'ease-out', zIndex: 10 }} />
@@ -233,29 +320,15 @@ export default function DesktopLayout({
                         <div className="flex flex-col items-start gap-4">
                             <button
                                 onClick={() => handlePageChange('work')}
-                                className={`tracking-[0.2em] relative uppercase transition-all duration-300 font-primary text-left ${activePage === 'work' ? 'text-lg font-normal opacity-100' : 'text-base opacity-40 font-medium hover:opacity-100 cursor-pointer'}`}
+                                className={`flex items-center gap-0 tracking-[0.2em] relative uppercase transition-all duration-300 font-primary text-left ${activePage === 'work' ? 'text-lg font-normal opacity-100' : 'text-base opacity-40 font-medium hover:opacity-100 cursor-pointer'}`}
+                                onMouseEnter={() => !isTouch && setHoveredNav('Projects')}
+                                onMouseLeave={() => !isTouch && setHoveredNav(null)}
+                                style={{ color: activePage === 'work' ? colorScheme.base : 'inherit' }}
                             >
                                 <span className="absolute inset-x-0 inset-y-[-2px] entry-highlight-mask" style={{ backgroundColor: colorScheme.compString, transformOrigin: 'left center', zIndex: 10, opacity: 1 }} />
+                                <span className="transition-all ease-out" style={{ width: (hoveredNav === 'Projects' || activePage === 'work') ? '4px' : '0px', height: (hoveredNav === 'Projects' || activePage === 'work') ? '1em' : '1px', backgroundColor: colorScheme.compString, marginRight: (hoveredNav === 'Projects' || activePage === 'work') ? '8px' : '0px', opacity: (hoveredNav === 'Projects' || activePage === 'work') ? 1 : 0, transitionProperty: 'width, height, margin-right, opacity', transitionDuration: '300ms, 200ms, 300ms, 300ms', transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)', zIndex: -1 }} />
                                 <span className="relative" style={{ zIndex: 1 }}>Projects</span>
                             </button>
-
-                            {/* Sub-item: LuckBros (Only when activePage is 'work') */}
-                            {activePage === 'work' && (
-                                <div className="flex flex-col items-start w-full animate-slide-right">
-                                    <a
-                                        href="#"
-                                        onClick={(e) => { e.preventDefault(); handlePageChange('work'); setClickedItem('LuckBros'); setTimeout(() => setClickedItem(null), 300); }}
-                                        className={`group relative text-base tracking-[0.2em] font-primary transition-all duration-300 flex items-center gap-0 font-normal`}
-                                        onMouseEnter={() => setHoveredNav('LuckBros')}
-                                        onMouseLeave={() => setHoveredNav(null)}
-                                        style={{ color: clickedItem === 'LuckBros' ? (isLightMode ? '#ffffff' : '#000000') : colorScheme.base }}
-                                    >
-                                        <span className="absolute inset-0 transition-all duration-300" style={{ backgroundColor: colorScheme.compString, opacity: clickedItem === 'LuckBros' ? 1 : 0, transformOrigin: 'left center', transform: clickedItem === 'LuckBros' ? 'scaleX(1)' : 'scaleX(0)', transitionProperty: 'opacity, transform', transitionTimingFunction: 'ease-out', zIndex: 10 }} />
-                                        <span className="transition-all ease-out" style={{ width: (hoveredNav === 'LuckBros' || hoveredNav === null) && clickedItem !== 'LuckBros' ? '0.5cqw' : '0px', height: (hoveredNav === 'LuckBros' || hoveredNav === null) && clickedItem !== 'LuckBros' ? '1em' : '1px', backgroundColor: colorScheme.compString, marginRight: (hoveredNav === 'LuckBros' || hoveredNav === null) && clickedItem !== 'LuckBros' ? '8px' : '0px', opacity: (hoveredNav === 'LuckBros' || hoveredNav === null) && clickedItem !== 'LuckBros' ? 1 : 0, transitionProperty: 'width, height, margin-right, opacity', transitionDuration: '300ms, 200ms, 300ms, 300ms', transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)', zIndex: -1 }} />
-                                        <span className="relative" style={{ zIndex: 5 }}>LuckBros</span>
-                                    </a>
-                                </div>
-                            )}
                         </div>
                     </nav>
                 </div>
@@ -264,7 +337,7 @@ export default function DesktopLayout({
                 <div className="flex flex-col mt-auto">
                     {/* CL: Center Left (Role sitting on top of FL) */}
                     <div className="cl-container">
-                        <div className="flex flex-col leading-tight tracking-widest font-primary cursor-pointer group overflow-hidden" style={{ fontSize: 'clamp(0.5rem, 1.4vw, 1.4rem)' }} onMouseEnter={() => setIsRoleHovered(true)} onMouseLeave={() => setIsRoleHovered(false)}>
+                        <div className="flex flex-col leading-tight tracking-widest font-primary cursor-pointer group overflow-hidden" style={{ fontSize: 'clamp(0.5rem, 1.4vw, 1.4rem)' }} onMouseEnter={() => !isTouch && setIsRoleHovered(true)} onMouseLeave={() => !isTouch && setIsRoleHovered(false)}>
                             {[0, 1, 2].map((offset) => {
                                 const roleIndex = (currentRoleIndex + offset) % roles.length; const role = roles[roleIndex]; const isFirst = offset === 0;
                                 return (
@@ -367,7 +440,7 @@ export default function DesktopLayout({
                                             <div className="space-y-6 leading-relaxed text-[13px] text-left max-w-[35vw] font-content">
                                                 <h2 className={`text-xl font-normal font-primary mb-2 tracking-tight ${theme.highlight}`}>Hi, I'm Vinz.</h2>
                                                 <p>I am a Creative Operations Architect who helps Creative Teams escape production limits and maximize their impact.</p>
-                                                <p>With over 12 years of experience spanning roles from Head of Foundation to 2D Team Lead, I bridge the gap between traditional artistry and modern efficiency.</p>
+                                                <p>With over 12 years of experience spanning roles from Art & Design Educator to Design Team Lead, I bridge the gap between traditional artistry and modern efficiency.</p>
                                                 <p>Unlike generalist designers, I specialize in Hybrid Design Systems. I have successfully implemented AI-based rendering workflows that scaled asset production for illustration, visual design, and mobile game projects, proving that AI can amplify output without sacrificing quality. I am here to help your studio build "AI-Resilient" pipelines that empower your artists to use technology for control, not replacement.</p>
                                                 <div className="mt-6">
                                                     <h4 className={`text-xs uppercase tracking-widest font-normal ${theme.subText} mb-4 font-primary`}>My Focus:</h4>
