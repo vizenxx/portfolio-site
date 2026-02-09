@@ -52,10 +52,10 @@ const projects = [
             }
         ],
         images: [
-            { id: "header", src: "/portfolio-site/projects/case9/1.jpg" },
-            { id: "main-mural", src: "/portfolio-site/projects/case9/2.jpg" },
-            { id: "artifacts", src: "/portfolio-site/projects/case9/3.jpg" },
-            { id: "process-1", src: "/portfolio-site/projects/case9/4.jpg" },
+            { id: "header", src: "/projects/case9/1.jpg" },
+            { id: "main-mural", src: "/projects/case9/2.jpg" },
+            { id: "artifacts", src: "/projects/case9/3.jpg" },
+            { id: "process-1", src: "/projects/case9/4.jpg" },
         ]
     },
     /*
@@ -91,8 +91,8 @@ const projects = [
             }
         ],
         images: [
-            { id: "meta-header", src: "/portfolio-site/projects/case9/1.jpg" }, // Reuse internal images if no meta-header exists, or use common ones
-            { id: "meta-main", src: "/portfolio-site/projects/case9/2.jpg" },
+            { id: "meta-header", src: "/projects/case9/1.jpg" }, // Reuse internal images if no meta-header exists, or use common ones
+            { id: "meta-main", src: "/projects/case9/2.jpg" },
         ]
     }
     */

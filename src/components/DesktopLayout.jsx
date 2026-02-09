@@ -406,7 +406,7 @@ export default function DesktopLayout({
                                             <div className={`flex flex-col w-full aspect-[1/1] rounded-2xl border ${isLightMode ? 'bg-white/10 border-black/10' : 'bg-black/5 border-white/10'} backdrop-blur-md shadow-lg shadow-black/5 overflow-hidden relative group shrink-0`}>
                                                 <div className="absolute inset-0">
                                                     <img
-                                                        src="/portfolio-site/vinz-portrait.jpg"
+                                                        src="/vinz-portrait.jpg"
                                                         alt="Vinz Portrait"
                                                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                                     />

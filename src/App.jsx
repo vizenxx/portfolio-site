@@ -51,7 +51,7 @@ export default function App() {
 
   // Audio Logic (v13.92 - Refined Auto-start Fallback)
   useEffect(() => {
-    const audio = new Audio('/portfolio-site/music/BGM.MP3');
+    const audio = new Audio('/music/BGM.MP3');
     audio.loop = true;
     audio.volume = 0;
     audio.muted = true; // Essential for browser autoplay permission

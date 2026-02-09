@@ -322,7 +322,7 @@ export default function LandscapeTabletLayout({
                     <div className="flex flex-col justify-center items-start h-full" style={{ flex: 4 }}>
                         <div className="flex flex-col gap-8 w-[80%]">
                             <div className={`flex flex-col w-full aspect-[1/1] rounded-2xl border ${isLightMode ? 'bg-white/10 border-black/10' : 'bg-black/5 border-white/10'} backdrop-blur-md shadow-lg overflow-hidden relative group shrink-0`}>
-                                <div className="absolute inset-0"><img src="/portfolio-site/vinz-portrait.jpg" alt="Vinz Portrait" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" /></div>
+                                <div className="absolute inset-0"><img src="/vinz-portrait.jpg" alt="Vinz Portrait" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" /></div>
                             </div>
                             <div className="flex flex-col gap-2 w-full">
                                 <h3 className={`text-xs uppercase tracking-[0.2em] mb-3 ${theme.subText} text-left font-primary`}>Expertise</h3>

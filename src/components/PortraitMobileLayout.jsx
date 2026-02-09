@@ -584,7 +584,7 @@ export default function PortraitMobileLayout({
                 <section ref={aboutRef} id="about" className="w-full flex flex-col pt-20 relative overflow-hidden scroll-mt-28">
                     <div className={`w-full h-[65vh] relative overflow-hidden`}>
                         <img
-                            src="/portfolio-site/vinz-portrait.jpg"
+                            src="/vinz-portrait.jpg"
                             alt="Vinz Portrait"
                             className="w-full h-full object-cover transition-all duration-1000"
                         />
